@@ -1,0 +1,6 @@
+# 3rd-party / vendor files
+node_modules
+
+# directories managed by `cordova` and scripts
+/platforms/*
+/plugins/*

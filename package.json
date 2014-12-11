@@ -1,0 +1,12 @@
+{
+  "name": "hybrid-app",
+  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@git.blinkm.co:40022/blinkmobile-internal/hybrid-app.git"
+  },
+  "devDependencies": {
+    "bluebird": "^2.3.11",
+    "rimraf": "^2.2.8"
+  }
+}

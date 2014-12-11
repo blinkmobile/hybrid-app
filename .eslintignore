@@ -1,0 +1,9 @@
+# 3rd-party / vendor
+bower_components
+node_modules
+platforms
+plugins
+
+# IDE files
+/.idea
+/nbproject
