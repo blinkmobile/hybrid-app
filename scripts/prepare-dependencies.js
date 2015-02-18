@@ -20,7 +20,10 @@ var PLATFORMS = {
   'android': '3.6.4',
   'ios': '3.7.0'
 };
-var PLUGINS = {};
+var PLUGINS = {
+   'org.apache.cordova.statusbar' : '@0.1.9'
+//'https://github.com/phonegap-build/StatusBarPlugin.git' : '#1.1.0'
+};
 
 var cwd = path.join(__dirname, '..');
 
@@ -82,7 +85,8 @@ function installPlugins() {
     var version = PLUGINS[plugin];
     current = current.then(function () {
       console.info('installing ' + plugin + ' v' + version + ' ...');
-      return execCordova('plugin add ' + plugin + '@' + version);
+
+      return execCordova('plugin add ' + plugin + version);
     });
     return current;
   }));

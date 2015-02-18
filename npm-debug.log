@@ -1,0 +1,92 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'node', '/usr/local/bin/npm', 'install' ]
+2 info using npm@1.4.28
+3 info using node@v0.10.33
+4 verbose readDependencies using package.json deps
+5 verbose install where, deps [ '/Users/maggieshi/Projects/hybrid-app',
+5 verbose install   [ 'bluebird', 'jquery-mobile', 'rimraf' ] ]
+6 info preinstall hybrid-app@0.0.1
+7 verbose readDependencies using package.json deps
+8 verbose already installed skipping bluebird@^2.3.11 /Users/maggieshi/Projects/hybrid-app
+9 verbose cache add [ 'jquery-mobile@^1.10.2', null ]
+10 verbose cache add name=undefined spec="jquery-mobile@^1.10.2" args=["jquery-mobile@^1.10.2",null]
+11 verbose parsed url { protocol: null,
+11 verbose parsed url   slashes: null,
+11 verbose parsed url   auth: null,
+11 verbose parsed url   host: null,
+11 verbose parsed url   port: null,
+11 verbose parsed url   hostname: null,
+11 verbose parsed url   hash: null,
+11 verbose parsed url   search: null,
+11 verbose parsed url   query: null,
+11 verbose parsed url   pathname: 'jquery-mobile@^1.10.2',
+11 verbose parsed url   path: 'jquery-mobile@^1.10.2',
+11 verbose parsed url   href: 'jquery-mobile@^1.10.2' }
+12 verbose already installed skipping rimraf@^2.2.8 /Users/maggieshi/Projects/hybrid-app
+13 verbose cache add name="jquery-mobile" spec="^1.10.2" args=["jquery-mobile","^1.10.2"]
+14 verbose parsed url { protocol: null,
+14 verbose parsed url   slashes: null,
+14 verbose parsed url   auth: null,
+14 verbose parsed url   host: null,
+14 verbose parsed url   port: null,
+14 verbose parsed url   hostname: null,
+14 verbose parsed url   hash: null,
+14 verbose parsed url   search: null,
+14 verbose parsed url   query: null,
+14 verbose parsed url   pathname: '^1.10.2',
+14 verbose parsed url   path: '^1.10.2',
+14 verbose parsed url   href: '^1.10.2' }
+15 verbose addNamed [ 'jquery-mobile', '^1.10.2' ]
+16 verbose addNamed [ null, '>=1.10.2-0 <2.0.0-0' ]
+17 silly lockFile 205ff747-jquery-mobile-1-10-2 jquery-mobile@^1.10.2
+18 verbose lock jquery-mobile@^1.10.2 /Users/maggieshi/.npm/205ff747-jquery-mobile-1-10-2.lock
+19 silly addNameRange { name: 'jquery-mobile',
+19 silly addNameRange   range: '>=1.10.2-0 <2.0.0-0',
+19 silly addNameRange   hasData: false }
+20 verbose request where is /jquery-mobile
+21 verbose request registry https://registry.npmjs.org/
+22 verbose request id 4bae393231163ef0
+23 verbose url raw /jquery-mobile
+24 verbose url resolving [ 'https://registry.npmjs.org/', './jquery-mobile' ]
+25 verbose url resolved https://registry.npmjs.org/jquery-mobile
+26 verbose request where is https://registry.npmjs.org/jquery-mobile
+27 info trying registry request attempt 1 at 12:33:43
+28 http GET https://registry.npmjs.org/jquery-mobile
+29 http 200 https://registry.npmjs.org/jquery-mobile
+30 silly registry.get cb [ 200,
+30 silly registry.get   { date: 'Wed, 18 Feb 2015 01:33:40 GMT',
+30 silly registry.get     server: 'CouchDB/1.5.0 (Erlang OTP/R16B03)',
+30 silly registry.get     etag: '"6C72HF2JT3B8NZ7H7UK6SY6IA"',
+30 silly registry.get     'content-type': 'application/json',
+30 silly registry.get     'cache-control': 'max-age=60',
+30 silly registry.get     'content-length': '11427',
+30 silly registry.get     'accept-ranges': 'bytes',
+30 silly registry.get     via: '1.1 varnish',
+30 silly registry.get     age: '0',
+30 silly registry.get     'x-served-by': 'cache-syd1622-SYD',
+30 silly registry.get     'x-cache': 'MISS',
+30 silly registry.get     'x-cache-hits': '0',
+30 silly registry.get     'x-timer': 'S1424223220.586754,VS0,VE238',
+30 silly registry.get     vary: 'Accept',
+30 silly registry.get     'keep-alive': 'timeout=10, max=50',
+30 silly registry.get     connection: 'Keep-Alive' } ]
+31 silly addNameRange number 2 { name: 'jquery-mobile',
+31 silly addNameRange   range: '>=1.10.2-0 <2.0.0-0',
+31 silly addNameRange   hasData: true }
+32 silly addNameRange versions [ 'jquery-mobile', [ '1.4.2-pre', '1.4.1' ] ]
+33 silly lockFile 205ff747-jquery-mobile-1-10-2 jquery-mobile@^1.10.2
+34 silly lockFile 205ff747-jquery-mobile-1-10-2 jquery-mobile@^1.10.2
+35 error notarget No compatible version found: jquery-mobile@'>=1.10.2-0 <2.0.0-0'
+35 error notarget Valid install targets:
+35 error notarget ["1.4.2-pre","1.4.1"]
+35 error notarget
+35 error notarget This is most likely not a problem with npm itself.
+35 error notarget In most cases you or one of your dependencies are requesting
+35 error notarget a package version that doesn't exist.
+36 error System Darwin 14.1.0
+37 error command "node" "/usr/local/bin/npm" "install"
+38 error cwd /Users/maggieshi/Projects/hybrid-app
+39 error node -v v0.10.33
+40 error npm -v 1.4.28
+41 error code ETARGET
+42 verbose exit [ 1, true ]
