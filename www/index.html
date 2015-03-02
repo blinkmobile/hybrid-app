@@ -40,13 +40,35 @@
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript" src="js/poll-until.js"></script>
         <script>
+            function takePic(){
+                    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
+                        destinationType: Camera.DestinationType.DATA_URL
+                    });
+            }
+        
+            function onSuccess(imageData) {
+                setTimeout(function() {
+                // do your thing here!
+                var image = document.getElementById('myImage');
+                image.src = "data:image/jpeg;base64," + imageData;
+                           }, 0);
+            }
+        
+            function onFail(message) {
+                setTimeout(function() {
+                alert('Failed because: ' + message);
+                           }, 0);
+            }
             function setStatusBar(){
                 console.log("status bar is :"+typeof StatusBar);
+                console.log("camera is " + navigator.camera);
+                //takePic();
+                 
                 if(typeof StatusBar !== 'undefined'){
                     //just for sample if you need call function from plugin
-<!--                    if(StatusBar && StatusBar.isVisible){-->
-<!--                        StatusBar.hide();-->
-<!--                    }-->
+                    if(StatusBar && StatusBar.isVisible){
+                        //StatusBar.hide();
+                    }
                 }
                 window.location.replace("https://blinkm.co/support");
             }
@@ -60,5 +82,7 @@
 <!--                      window.location.replace("https://blinkm.co/support");-->
 <!--            });-->
         </script>
+        
+        <img id='myImage' width="100%" height="100%"></img>
     </body>
 </html>

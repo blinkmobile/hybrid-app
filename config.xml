@@ -7,7 +7,10 @@
     <author email="dev@cordova.apache.org" href="http://cordova.io">
         Apache Cordova Team
     </author>
-    <content src="index.html" />
+    <!--for launch app-->
+    <!--content src="index.html" /-->
+    <!--for test app-->
+    <content src="./tests/SpecRunner.html" />
     <access origin="*" />
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarStyle" value="default" />

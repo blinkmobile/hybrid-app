@@ -42,3 +42,5 @@ describe("poll-until", function() {
       
   });
 });
+
+registeredJS--;

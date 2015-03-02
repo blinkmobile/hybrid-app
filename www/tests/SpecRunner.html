@@ -14,11 +14,27 @@
 
   <!-- include source files here... -->
   <script type="text/javascript" src="../js/poll-until.js"></script>
-    
+  <script type="text/javascript" src="../cordova.js"></script>
+  <script type="text/javascript" src="../cordova_plugins.js"></script>
+  <script type="text/javascript" src="spec/testCaseManager.js"></script>
+  
   <!-- include spec files here... -->
-  <script type="text/javascript" src="spec/poll-untilSpec.js"></script>
+  <!--script type="text/javascript" src="spec/poll-untilSpec.js"></script-->
+  <script type="text/javascript" >
+      
+      function startTest(){
+          console.log("status bar is :"+typeof StatusBar);
+          console.log("camera is " + navigator.camera);
+          registeredJS = 0;
+          registerTestCase('poll-until', 'spec/poll-untilSpec.js');
+          registerTestCase('statusbar', 'spec/statusbarSpec.js');
+          runTest();
+      }
+  
+      
+      document.addEventListener("deviceready", startTest, false);
+  </script>
 </head>
-
 <body>
 </body>
 </html>

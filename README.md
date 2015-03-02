@@ -21,7 +21,7 @@ var PLUGINS = {
 
 5. to update your change made in www and compile project, use: `cordova build [ios|android]`
 
-6. to launch emulator to test your app, use: `cordova emulator [ios|android]`
+6. to launch emulator to test your app, use: `cordova emulate [ios|android]`
 
 7. for iOS, when the webview finished loading page, webViewDidFinishLoad in the MainviewController will be called, so add these lines into it can verify url is correctly loaded
     NSString *currentURL = self.webView.request.mainDocumentURL.absoluteString;

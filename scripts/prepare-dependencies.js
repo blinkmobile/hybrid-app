@@ -21,7 +21,8 @@ var PLATFORMS = {
   'ios': '3.7.0'
 };
 var PLUGINS = {
-   'org.apache.cordova.statusbar' : '@0.1.9'
+   'org.apache.cordova.statusbar' : '@0.1.9',
+   'org.apache.cordova.camera' : '@0.3.5'
 //'https://github.com/phonegap-build/StatusBarPlugin.git' : '#1.1.0'
 };
 
