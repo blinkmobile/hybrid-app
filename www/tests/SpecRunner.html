@@ -7,6 +7,7 @@
   <link rel="shortcut icon" type="image/png" href="lib/jasmine-2.0.0/jasmine_favicon.png">
   <link rel="stylesheet" type="text/css" href="lib/jasmine-2.0.0/jasmine.css">
 
+  <script type="text/javascript" src="../js/vendor/winstore-jscompat.js"></script>
   <script src="./jqueryMobile/jquery-1.10.2.min.js"></script>
   <script type="text/javascript" src="lib/jasmine-2.0.0/jasmine.js"></script>
   <script type="text/javascript" src="lib/jasmine-2.0.0/jasmine-html.js"></script>
@@ -14,24 +15,23 @@
 
   <!-- include source files here... -->
   <script type="text/javascript" src="../js/poll-until.js"></script>
+  <script type="text/javascript" src="../js/test.js"></script>
   <script type="text/javascript" src="../cordova.js"></script>
-  <script type="text/javascript" src="../cordova_plugins.js"></script>
   <script type="text/javascript" src="spec/testCaseManager.js"></script>
-  
+
   <!-- include spec files here... -->
   <!--script type="text/javascript" src="spec/poll-untilSpec.js"></script-->
   <script type="text/javascript" >
-      
+
       function startTest(){
-          console.log("status bar is :"+typeof StatusBar);
-          console.log("camera is " + navigator.camera);
           registeredJS = 0;
           registerTestCase('poll-until', 'spec/poll-untilSpec.js');
+          registerTestCase('test', 'spec/testSpec.js');
           registerTestCase('statusbar', 'spec/statusbarSpec.js');
           runTest();
       }
-  
-      
+
+
       document.addEventListener("deviceready", startTest, false);
   </script>
 </head>

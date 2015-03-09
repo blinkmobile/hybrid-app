@@ -10,7 +10,7 @@
     <!--for launch app-->
     <!--content src="index.html" /-->
     <!--for test app-->
-    <content src="./tests/SpecRunner.html" />
+    <content src="tests/SpecRunner.html" />
     <access origin="*" />
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarStyle" value="default" />

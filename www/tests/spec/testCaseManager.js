@@ -16,6 +16,3 @@ function registerTestCase(id, jsSpec){
     head.appendChild(script);
     registeredJS++;
 }
-
-registeredJS--;
-

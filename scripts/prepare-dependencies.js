@@ -17,8 +17,9 @@ var Promise = typeof Promise === 'undefined' ? require('bluebird') : Promise;
 // this module
 
 var PLATFORMS = {
-  'android': '3.6.4',
-  'ios': '3.7.0'
+  //'android': '3.6.4',
+  //'ios': '3.7.0'
+  'windows': '3.8.0'
 };
 var PLUGINS = {
    'org.apache.cordova.statusbar' : '@0.1.9',
