@@ -1,0 +1,72 @@
+*, *::after, *::before {
+  box-sizing: inherit;
+}
+
+html {
+  box-sizing: border-box;
+}
+
+html, body, iframe, x-ms-webview {
+  margin: 0;
+  padding: 0;
+}
+
+button {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+iframe, x-ms-webview {
+  /* would be nice to somehow accomodate user's theme preference */
+  background-color: #fff;
+}
+
+.fullscreen {
+  width: 100vw;
+  height: 100vh;
+}
+
+.layout {
+  display: flex;
+}
+
+.layout > * {
+  flex-grow: 1;
+}
+
+.layout.centered {
+  align-items: center;
+  justify-content: center;
+}
+
+.layout.horizontal {
+  flex-direction: row;
+}
+
+.layout.vertical {
+  flex-direction: column;
+}
+
+@media only screen
+  and (orientation: landscape) {
+
+  .layout.auto-long {
+    flex-direction: row;
+  }
+  .layout.auto-short {
+    flex-direction: column;
+  }
+
+}
+
+@media only screen
+  and (orientation: portrait) {
+
+  .layout.auto-long {
+    flex-direction: column;
+  }
+  .layout.auto-short {
+    flex-direction: row;
+  }
+
+}

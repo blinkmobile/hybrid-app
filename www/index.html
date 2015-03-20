@@ -25,16 +25,23 @@
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <link href="css/ui-themed.css" rel="stylesheet" />
+        <script src="//Microsoft.Phone.WinJS.2.1/js/base.js"></script>
+        <script src="//Microsoft.Phone.WinJS.2.1/js/ui.js"></script>
+        <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
+        <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
+        <link href="css/default.css" rel="stylesheet" />
+        <link href="css/answerSpace.css" rel="stylesheet" />
+        <script type="text/javascript" src="js/manifest.js"></script>
+        <script type="text/javascript" src="js/blinkgap.js"></script>
+        <!--script type="text/javascript" src="js/navigator.js"></script-->
+        <script type="text/javascript" src="js/default.js"></script>
         <title>Hello World</title>
     </head>
     <body>
-        <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
-            </div>
-        </div>
+      <div id="answerSpaceFrameContainer">
+      </div>
+      <a href="" id="answerSpaceFramelink"></a>
         <script type="text/javascript" src="js/vendor/winstore-jscompat.js"></script>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
@@ -70,9 +77,18 @@
                         StatusBar.hide();
                     }
                 }
-
-                window.location.replace("https://blinkm.co/support");
+                //startDefaultJS();
+                //window.location.replace("https://blinkm.co/support");
             }
+
+            function startDefaultJS(){
+                var head = document.getElementsByTagName('head').item(0);
+                var script = document.createElement('script');
+                script.setAttribute('type', 'text/javascript');
+                script.setAttribute('src', 'js/default.js');
+                head.appendChild(script);
+            }
+
 
             document.addEventListener("deviceready", setStatusBar, false);
 
@@ -83,7 +99,5 @@
 <!--                      window.location.replace("https://blinkm.co/support");-->
 <!--            });-->
         </script>
-        <div id='myDiv'>hello world</div>
-        <img id='myImage' width="100%" height="100%"></img>
-    </body>
+      </body>
 </html>

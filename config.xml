@@ -8,10 +8,44 @@
         Apache Cordova Team
     </author>
     <!--for launch app-->
-    <!--content src="index.html" /-->
+    <content src="index.html" />
     <!--for test app-->
-    <content src="tests/SpecRunner.html" />
+    <!--content src="tests/SpecRunner.html" /-->
     <access origin="*" />
+    <access origin="https://*.cloudfront.net" subdomains="true"/>
+
+    <!-- these are our current default domains -->
+    <access origin="https://*.blinkm.co" subdomains="true"/>
+
+    <!-- redundant but whatever -->
+    <access origin="https://d.blinkm.co" subdomains="true"/>
+
+    <!-- is this even used? -->
+    <access origin="https://blinkev.co" subdomains="true"/>
+
+    <access origin="https://d.sg.blinkm.co" subdomains="true"/>
+    <access origin="https://d.eu.blinkm.co" subdomains="true"/>
+
+    <!-- cre8 domains -->
+    <access origin="https://cre8m.co" subdomains="true"/>
+    <access origin="https://d.cre8m.co" subdomains="true"/>
+
+    <!-- required because the platform uses google maps -->
+    <access origin="https://google.com" subdomains="true"/>
+    <access origin="https://*.google.com" subdomains="true" launch-external="true"/>
+    <access origin="https://google.com.au" subdomains="true"/>
+    <access origin="https://*.google.com.au" subdomains="true" launch-external="true"/>
+    <access origin="https://google.co.uk" subdomains="true"/>
+    <access origin="https://*.google.co.uk" subdomains="true" launch-external="true"/>
+    <access origin="https://google.us" subdomains="true"/>
+    <access origin="https://*.google.us" subdomains="true" launch-external="true"/>
+    <access origin="https://googleapis.com" subdomains="true"/>
+    <access origin="https://maps.gstatic.com" subdomains="true"/>
+    <access origin="https://ssl.gstatic.com" subdomains="true"/>
+
+    <access origin="https://facebook.com" subdomains="true" launch-external="true"/>
+    <access origin="https://twitter.com" subdomains="true" launch-external="true"/>
+
     <preference name="StatusBarOverlaysWebView" value="false" />
     <preference name="StatusBarStyle" value="default" />
     <preference name="Fullscreen" value="false" />
