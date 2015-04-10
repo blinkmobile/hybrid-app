@@ -26,6 +26,7 @@
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <link href="css/ui-themed.css" rel="stylesheet" />
+        <script type="text/javascript" src="js/vendor/winstore-jscompat.js"></script>
         <script src="//Microsoft.Phone.WinJS.2.1/js/base.js"></script>
         <script src="//Microsoft.Phone.WinJS.2.1/js/ui.js"></script>
         <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
@@ -34,7 +35,7 @@
         <link href="css/answerSpace.css" rel="stylesheet" />
         <script type="text/javascript" src="js/manifest.js"></script>
         <script type="text/javascript" src="js/blinkgap.js"></script>
-        <!--script type="text/javascript" src="js/navigator.js"></script-->
+        <script type="text/javascript" src="js/navigator.js"></script>
         <script type="text/javascript" src="js/default.js"></script>
         <title>Hello World</title>
     </head>
@@ -42,7 +43,8 @@
       <div id="answerSpaceFrameContainer">
       </div>
       <a href="" id="answerSpaceFramelink"></a>
-        <script type="text/javascript" src="js/vendor/winstore-jscompat.js"></script>
+      <div id="contenthost" data-win-control="Application.PageControlNavigator"
+              data-win-options="{home: 'www/offlineData/d6aad549714cef60767a6c032f233500.html'}"></div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript" src="js/poll-until.js"></script>
@@ -77,7 +79,7 @@
                         StatusBar.hide();
                     }
                 }
-                //startDefaultJS();
+
                 //window.location.replace("https://blinkm.co/support");
             }
 
@@ -90,7 +92,7 @@
             }
 
 
-            document.addEventListener("deviceready", setStatusBar, false);
+            document.addEventListener("deviceready", startDefaultJS, false);
 
 <!--            pollUntil(function () {-->
 <!--                  return typeof StatusBar !== 'undefined' && StatusBar-->

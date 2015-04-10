@@ -84,7 +84,7 @@
                     WinJS.UI.Animation.enterPage(this._getAnimationElements()).done();
                 },
 
-                // Responds to navigation by adding new pages to the DOM. 
+                // Responds to navigation by adding new pages to the DOM.
                 _navigating: function (args) {
                     var newElement = this._createPageElement();
                     this._element.appendChild(newElement);
@@ -96,7 +96,7 @@
                     function cleanup() {
                         if (that._element.childElementCount > 1) {
                             var oldElement = that._element.firstElementChild;
-                            // Cleanup and remove previous element 
+                            // Cleanup and remove previous element
                             if (oldElement.winControl) {
                                 if (oldElement.winControl.unload) {
                                     oldElement.winControl.unload();

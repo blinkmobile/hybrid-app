@@ -19,6 +19,8 @@ button {
 iframe, x-ms-webview {
   /* would be nice to somehow accomodate user's theme preference */
   background-color: #fff;
+  height: 100%;
+  width: 100%;
 }
 
 .fullscreen {

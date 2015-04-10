@@ -8,7 +8,8 @@
         Apache Cordova Team
     </author>
     <!--for launch app-->
-    <content src="index.html" />
+    <content src="offlineData/d6aad549714cef60767a6c032f233500.html" />
+    <!--content src="index.html" /-->
     <!--for test app-->
     <!--content src="tests/SpecRunner.html" /-->
     <access origin="*" />
