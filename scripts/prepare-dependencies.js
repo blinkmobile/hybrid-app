@@ -23,8 +23,12 @@ var PLATFORMS = {
 };
 var PLUGINS = {
    'org.apache.cordova.statusbar' : '@0.1.9',
-   'org.apache.cordova.camera' : '@0.3.5'
-//'https://github.com/phonegap-build/StatusBarPlugin.git' : '#1.1.0'
+   'org.apache.cordova.camera' : '@0.3.5',
+   //with cli, we can use: cordova plugin add cordova-plugin-geolocation@1.0.0
+   //also version 1.0.0 can't work through cordova plugin add
+   'org.apache.cordova.geolocation' : '@0.3.12'
+   //if you need add plugin through github, follow this format, pay attention to the leading of version number, it is # instead of @
+   //'https://github.com/phonegap-build/StatusBarPlugin.git' : '#1.1.0'
 };
 
 var cwd = path.join(__dirname, '..');

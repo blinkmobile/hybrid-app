@@ -33,6 +33,7 @@ Manifest.prototype.parse = function (callback) {
     } else if (line.indexOf('#') === 0) {
       return;
     } else {
+      if(currentSection === null) currentSection = 'cache';
       entries[currentSection].push(line)
     }
 

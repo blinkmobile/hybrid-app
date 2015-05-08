@@ -1,105 +1,43 @@
 <!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+<html data-manifest-url="/appcache.manifest">
+<head>
+  <title>integration</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="4193ca890f8bf6a80f5dd156d65dcd2b46f4a8fa.css"><link rel="stylesheet" href="c67677f2df03fb7db07640bb0644bcc6b61bfc52.css"><link rel="stylesheet" href="b234dd1de7824fac006c030418dcc121ac55ac9e.css"><link rel="stylesheet" href="da9d7199bcb4f3039a7f13008729940b097c8750.css">
 
-    http://www.apache.org/licenses/LICENSE-2.0
+  <style>
+    .blink-star-on, .blink-star-off { display: inline-block; margin: .1em; width: 32px; height: 32px; background-color: transparent; }
+    .blink-star-on { background-image: url(/gfx/star-on32.png); }
+    .blink-star-off { background-image: url(/gfx/star-off32.png); }
+    #FormPageCount > .ui-controlgroup-controls {width: 100%; }
+    #FormPageCount a {width: 33%; }
+    .googlemap { width: 100%; height: 360px; }
+  </style>
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
-<html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="msapplication-tap-highlight" content="no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <link href="css/ui-themed.css" rel="stylesheet" />
-        <script type="text/javascript" src="js/vendor/winstore-jscompat.js"></script>
-        <script src="//Microsoft.Phone.WinJS.2.1/js/base.js"></script>
-        <script src="//Microsoft.Phone.WinJS.2.1/js/ui.js"></script>
-        <script src="//Microsoft.WinJS.2.0/js/base.js"></script>
-        <script src="//Microsoft.WinJS.2.0/js/ui.js"></script>
-        <link href="css/default.css" rel="stylesheet" />
-        <link href="css/answerSpace.css" rel="stylesheet" />
-        <script type="text/javascript" src="js/manifest.js"></script>
-        <script type="text/javascript" src="js/blinkgap.js"></script>
-        <script type="text/javascript" src="js/navigator.js"></script>
-        <script type="text/javascript" src="js/default.js"></script>
-        <title>Hello World</title>
-    </head>
-    <body>
-      <div id="answerSpaceFrameContainer">
-      </div>
-      <a href="" id="answerSpaceFramelink"></a>
-      <div id="contenthost" data-win-control="Application.PageControlNavigator"
-              data-win-options="{home: 'www/offlineData/d6aad549714cef60767a6c032f233500.html'}"></div>
-        <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript" src="js/poll-until.js"></script>
-        <script>
-            function takePic(){
-                    navigator.camera.getPicture(onSuccess, onFail, { quality: 50,
-                        destinationType: Camera.DestinationType.DATA_URL
-                    });
-            }
-
-            function onSuccess(imageData) {
-                setTimeout(function() {
-                // do your thing here!
-                var image = document.getElementById('myImage');
-                image.src = "data:image/jpeg;base64," + imageData;
-                           }, 0);
-            }
-
-            function onFail(message) {
-                setTimeout(function() {
-                console.log('Failed because: ' + message);
-                           }, 0);
-            }
-            function setStatusBar(){
-                console.log("status bar is :"+typeof StatusBar);
-                console.log("camera is " + navigator.camera);
-                //takePic();
-
-                if(typeof StatusBar !== 'undefined'){
-                    //just for sample if you need call function from plugin
-                    if(StatusBar && StatusBar.isVisible){
-                        StatusBar.hide();
-                    }
-                }
-
-                //window.location.replace("https://blinkm.co/support");
-            }
-
-            function startDefaultJS(){
-                var head = document.getElementsByTagName('head').item(0);
-                var script = document.createElement('script');
-                script.setAttribute('type', 'text/javascript');
-                script.setAttribute('src', 'js/default.js');
-                head.appendChild(script);
-            }
-
-
-            document.addEventListener("deviceready", startDefaultJS, false);
-
-<!--            pollUntil(function () {-->
-<!--                  return typeof StatusBar !== 'undefined' && StatusBar-->
-<!--                  }, 500, function () {-->
-<!--                      setStatusBar();-->
-<!--                      window.location.replace("https://blinkm.co/support");-->
-<!--            });-->
-        </script>
-      </body>
+  <script src="appCacheIndex.js"></script>
+  <script src="//Microsoft.Phone.WinJS.2.1/js/base.js"></script><script src="//Microsoft.Phone.WinJS.2.1/js/ui.js"></script><script src="//Microsoft.WinJS.2.1/js/base.js"></script><script src="//Microsoft.WinJS.2.1/js/ui.js"></script>
+<script src="winstore-jscompat.js"></script>
+<script src="cordova.js"></script><script>
+    window.BMP = {
+      env: {},
+      BIC: {
+        siteVars: {
+          answerSpaceId: 20403,
+          answerSpace: 'integration'
+        },
+        isBlinkGap: /BlinkGap\//i.test('')
+      }
+    };
+  </script>
+  <!-- inject BlinkGap initialisation code here -->
+  <script id="bmp-blinkgap-js"></script><script>window.BMP.BIC.isBlinkGap = true;</script>
+</head>
+<body>
+  <noscript>You currently have JavaScript disabled. This application requires JavaScript to work correctly.</noscript>
+  <div data-role="page" id="temp">Loading, please wait.</div>
+  <script src="08835546e7bbfc8af99100a63828093a8e6f6c1b.js"></script>
+  <script src="require.load.js"></script>
+  <script src="19b883e02faeff13dee1cd39384abe99dae7179f.js"></script>
+</body>
 </html>

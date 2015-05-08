@@ -1,42 +1,39 @@
-/*jslint browser:true, indent:2*/
-/*global define, require*/ // Require.JS and AMD
-// Temporary Fixes
-// These will end up in Global Require (I hope...)
-
+/*eslint-env browser, node*/
 (function () {
+  
+  var cloudfront, filesystem, paths, getPaths, scripts, s, script;
 
-  var cloudfront, filesystem, rootPath, paths, getPaths, scripts, s, script,
-    supportsBundles, versionMatches;
+  var setConfig = function (cfg) {
+    if (typeof require !== 'undefined' && typeof require.config !== 'undefined') {
+      require.config(cfg);
+    } else if (typeof process !== 'undefined' && typeof module !== 'undefined') {
+      module.exports = cfg;
+    }
+  };
 
   cloudfront = '//d1c6dfkb81l78v.cloudfront.net/';
   filesystem = '/_c_/';
 
-  if (!document.currentScript) {
-    scripts = document.getElementsByTagName('script');
-    document.currentScript = scripts[scripts.length - 1];
-  }
-  /*jslint regexp:true*/ // this regular expression has been double-checked
-  if (window.BICURL) {
-    rootPath = window.BICURL.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
-  } else {
-    rootPath = document.currentScript.src.replace(/\\/g, '/').replace(/\/[^\/]*$/, '');
-  }
-  /*jslint regexp:false*/
-
-  // determine our current CDN based on how we referenced Require.JS
-  scripts = document.getElementsByTagName('script');
-  s = scripts.length;
-  while (s > 0) {
-    s -= 1;
-    script = scripts[s];
-    if (script.src && /\/blink\/require\/\d+\/require\.min\.js/.test(script.src)) {
-      cloudfront = script.src.replace(/blink\/require\/\d+\/require\.min\.js[\w\.]*$/, '');
-      break; // exit early
+  if (typeof document !== 'undefined' && typeof location !== 'undefined') {
+    if (!document.currentScript) {
+      scripts = document.getElementsByTagName('script');
+      document.currentScript = scripts[scripts.length - 1];
     }
-  }
+    // determine our current CDN based on how we referenced Require.JS
+    scripts = document.getElementsByTagName('script');
+    s = scripts.length;
+    while (s > 0) {
+      s -= 1;
+      script = scripts[s];
+      if (script.src && /\/blink\/require\/\d+\/require\.min\.js/.test(script.src)) {
+        cloudfront = script.src.replace(/blink\/require\/\d+\/require\.min\.js[\w\.]*$/, '');
+        break; // exit early
+      }
+    }
 
-  if (location.protocol === 'file:') {
-    cloudfront = cloudfront.replace(/^\/\//, 'https://');
+    if (location.protocol === 'file:') {
+      cloudfront = cloudfront.replace(/^\/\//, 'https://');
+    }
   }
 
   getPaths = function (path) {
@@ -50,72 +47,52 @@
 
   // dynamically set paths and fall-back paths;
   paths = {
-    BlinkForms: getPaths('blink/forms/3/3.1.7/forms3jqm.min'),
+    BlinkForms: getPaths('blink/forms/3/3.2.1/forms3jqm.min'),
     'BMP.Blobs': getPaths('blink/blobs/1377493706402/bmp-blobs.min'),
     signaturepad: getPaths('signaturepad/2.3.0/jq.sig.min'),
     jquerymobile: getPaths('jquery.mobile/1.3.2/jquery.mobile-1.3.2.min'),
     jquery: getPaths('jquery/1.9.1/jquery.min'),
     bluebird: getPaths('bluebird/1.2.4/bluebird.min'),
-    backbone: getPaths('backbonejs/1.0.0/backbone-min'),
+    backbone: getPaths('backbonejs/1.1.2/backbone-min'),
     lodash: getPaths('lodash/2.4.1/lodash.compat.min'),
     modernizr: getPaths('modernizr/2.7.1/modernizr.custom.26204.min'),
     mustache: getPaths('mustache/0.7.3/mustache.min'),
     q: getPaths('q/0.9.7/q.min'),
     underscore: getPaths('lodash/2.4.1/lodash.underscore.min'),
-    formsdeps: rootPath + "/formsdeps.min",
     'es5-shim': getPaths('es5-shim/2.3.0/es5-shim.min'),
-    pouchdb: getPaths('pouchdb/2.2.3/pouchdb-nightly.min')
+    pouchdb: getPaths('pouchdb/3.2.1/pouchdb-3.2.1.min')
   };
 
-  // check if we are using a pre-bundles Require.JS
-  supportsBundles = true;
-  if (require.version < "2.2") {
-    supportsBundles = false;
-    if (require.version >= "2.1") {
-      versionMatches = require.version.match(/(\d+)\.(\d+)\.(\d+)/);
-      if (versionMatches && versionMatches[3] >= 10) {
-        supportsBundles = true; // introduced in Require.JS 2.1.10
+  setConfig({
+    paths: paths,
+    shim: {
+      'BMP.Blobs': {
+        deps: ['underscore', 'jquery'],
+        exports: 'BMP'
+      },
+      'signaturepad': {
+        deps: ['jquery'],
+        exports: '$'
+      },
+      backbone: {
+        deps: ['underscore', 'jquery'],
+        exports: 'Backbone'
+      },
+      modernizr: {
+        exports: 'Modernizr'
+      },
+      underscore: {
+        exports: '_'
+      },
+      sjcl: {
+        exports: 'sjcl'
       }
     }
-  }
-  if (!supportsBundles) {
-    paths.moment = rootPath + '/formsdeps.min';
-    paths.picker = rootPath + '/formsdeps.min';
-    paths['picker.date'] = rootPath + '/formsdeps.min';
-    paths['picker.time'] = rootPath + '/formsdeps.min';
-  }
-
-  require.config({ paths: paths });
+  });
 }());
 
-require.config({
-  shim: {
-    'BMP.Blobs': {
-      deps: ['underscore', 'jquery'],
-      exports: 'BMP'
-    },
-    'signaturepad': {
-      deps: ['jquery'],
-      exports: '$'
-    },
-    backbone: {
-      deps: ['underscore', 'jquery'],
-      exports: 'Backbone'
-    },
-    modernizr: {
-      exports: 'Modernizr'
-    },
-    underscore: {
-      exports: '_'
-    }
-  },
-  bundles: {
-    'formsdeps': ['picker', 'picker.date', 'picker.time', 'moment']
-  }
-});
-
 define('implementations', [], function () {
-
+  
   return {
     'es5': [
       {
@@ -174,7 +151,7 @@ define('implementations', [], function () {
 
 /**
  * AMD-Feature - A loader plugin for AMD loaders.
- *
+ * 
  * https://github.com/jensarps/AMD-feature
  *
  * @author Jens Arps - http://jensarps.de/
@@ -233,7 +210,7 @@ define('feature',['implementations'], function (implementations) {
 
 // https://github.com/umdjs/umd/blob/master/returnExports.js
 (function (root, factory) {
-
+  
   if (typeof define === 'function' && define.amd) {
     define('pollUntil',[], factory);
   } else if (typeof exports === 'object') {
@@ -242,7 +219,7 @@ define('feature',['implementations'], function (implementations) {
     root.pollUntil = factory();
   }
 }(this, function () {
-
+  
   // https://gist.github.com/jokeyrhyme/9753904
   /**
    * @param {Function} condition a function that returns `true` or `false`
@@ -266,15 +243,8 @@ define('feature',['implementations'], function (implementations) {
   };
 }));
 
-/*jslint browser:true, indent:2*/
-/*global $, cordova*/ // 3rd-party globals
-/*global pollUntil*/
-
-/**
- *
- */
 (function () {
-
+  
   var BMP;
 
   BMP = window.BMP;
@@ -383,7 +353,7 @@ define('feature',['implementations'], function (implementations) {
 }());
 
 (function () {
-
+  
 
   if (!BMP.BlinkGap.hasOffline()) {
     return; // don't bother with this
@@ -477,8 +447,9 @@ define("BlinkGap", ["pollUntil"], (function (global) {
         root.bic = factory();
     }
 }(this, function (Promise, $, _, Backbone, Mustache, BlinkForms, jquerymobile, BMP, Modernizr, Pouch, pollUntil) {
+  window.pollUntil = pollUntil;
 /**
- * @license almond 0.2.9 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
+ * @license almond 0.3.1 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/almond for details
  */
@@ -523,12 +494,6 @@ var requirejs, require, define;
             //otherwise, assume it is a top-level require that will
             //be relative to baseUrl in the end.
             if (baseName) {
-                //Convert baseName to array, and lop off the last part,
-                //so that . matches that "directory" and not name of the baseName's
-                //module. For instance, baseName of "one/two/three", maps to
-                //"one/two/three.js", but we want the directory, "one/two" for
-                //this normalization.
-                baseParts = baseParts.slice(0, baseParts.length - 1);
                 name = name.split('/');
                 lastIndex = name.length - 1;
 
@@ -537,7 +502,11 @@ var requirejs, require, define;
                     name[lastIndex] = name[lastIndex].replace(jsSuffixRegExp, '');
                 }
 
-                name = baseParts.concat(name);
+                //Lop off the last part of baseParts, so that . matches the
+                //"directory" and not name of the baseName's module. For instance,
+                //baseName of "one/two/three", maps to "one/two/three.js", but we
+                //want the directory, "one/two" for this normalization.
+                name = baseParts.slice(0, baseParts.length - 1).concat(name);
 
                 //start trimDots
                 for (i = 0; i < name.length; i += 1) {
@@ -629,7 +598,15 @@ var requirejs, require, define;
             //A version of a require function that passes a moduleName
             //value for items that may need to
             //look up paths relative to the moduleName
-            return req.apply(undef, aps.call(arguments, 0).concat([relName, forceSync]));
+            var args = aps.call(arguments, 0);
+
+            //If first arg is not require('string'), and there is only
+            //one arg, it is the array form without a callback. Insert
+            //a null so that the following concat is correct.
+            if (typeof args[0] !== 'string' && args.length === 1) {
+                args.push(null);
+            }
+            return req.apply(undef, args.concat([relName, forceSync]));
         };
     }
 
@@ -879,6 +856,9 @@ var requirejs, require, define;
     requirejs._defined = defined;
 
     define = function (name, deps, callback) {
+        if (typeof name !== 'string') {
+            throw new Error('See almond README: incorrect module build, no module name');
+        }
 
         //This module may not have dependencies
         if (!deps.splice) {
@@ -899,17 +879,97 @@ var requirejs, require, define;
     };
 }());
 
-define("../bower_components/almond/almond", function(){});
+define("../node_modules/almond/almond", function(){});
+
+define('mediator',[], function () {
+  
+
+  var publish;
+  var subscribe;
+  var mediator;
+  var log;
+
+  mediator = {};
+  mediator.channels = {};
+
+  log = function (type, channel, args) {
+    /*eslint-disable no-console*/
+    console.log(Date.now() + ': ' + type + ' ' + channel, args);
+    /*eslint-enable no-console*/
+  };
+
+  publish = function (channel) {
+    var args;
+    var i;
+    var subscription;
+
+    if (!mediator.channels[channel]) {
+      return false;
+    }
+    args = Array.prototype.slice.call(arguments, 1);
+    for (i = 0; i < mediator.channels[channel].length; i++) {
+      subscription = mediator.channels[channel][i];
+      subscription.callback.apply(subscription.context, args);
+    }
+
+    if (BMP.Debug) {
+      log('Publish', channel, args);
+    }
+
+    return this;
+  };
+
+  subscribe = function (channel, fn) {
+    if (!mediator.channels[channel]) {
+      mediator.channels[channel] = [];
+    }
+    mediator.channels[channel].push({ context: this, callback: fn });
+
+    if (BMP.Debug) {
+      log('Subscribe', channel);
+    }
+
+    return this;
+  };
+
+  return {
+    publish: publish,
+    subscribe: subscribe
+  };
+});
+
+define('facade',['mediator'], function (mediator) {
+  
+
+  var publish;
+  var subscribe;
+
+  publish = function () {
+    mediator.publish.apply(this, arguments);
+  };
+
+  subscribe = function (subscriber, channel, callback) {
+    // subscriber is here to allow future permission checking
+    mediator.subscribe(channel, callback);
+  };
+
+  return {
+    publish: publish,
+    subscribe: subscribe
+  };
+});
 
 define('implementations',[],function () {
-
+  
   return {
     'data': [
       {
         isAvailable: function () {
           try {
-            return (Modernizr.indexeddb && window.indexedDB.open('idbTest', 1).onupgradeneeded === null && navigator.userAgent.indexOf('iPhone') === -1 && navigator.userAgent.indexOf('iPad') === -1) || (window.BMP.BIC.isBlinkGap && Modernizr.websqldatabase);
-          } catch (ignore) {}
+            return Modernizr.indexeddb && window.indexedDB.open('idbTest', 1).onupgradeneeded === null && navigator.userAgent.indexOf('iPhone') === -1 && navigator.userAgent.indexOf('iPad') === -1 || window.BMP.BIC.isBlinkGap && Modernizr.websqldatabase;
+          } catch (ignore) {
+            return false;
+          }
           return false;
         },
 
@@ -943,7 +1003,7 @@ define('implementations',[],function () {
 
 /**
  * AMD-Feature - A loader plugin for AMD loaders.
- *
+ * 
  * https://github.com/jensarps/AMD-feature
  *
  * @author Jens Arps - http://jensarps.de/
@@ -1016,9 +1076,9 @@ define('feature',['implementations'], function (implementations) {
   // Node.js crypto-based RNG - http://nodejs.org/docs/v0.6.2/api/crypto.html
   //
   // Moderately fast, high quality
-  if (typeof(require) == 'function') {
+  if (typeof(_global.require) == 'function') {
     try {
-      var _rb = require('crypto').randomBytes;
+      var _rb = _global.require('crypto').randomBytes;
       _rng = _rb && function() {return _rb(16);};
     } catch(e) {}
   }
@@ -1051,7 +1111,7 @@ define('feature',['implementations'], function (implementations) {
   }
 
   // Buffer class to use
-  var BufferClass = typeof(Buffer) == 'function' ? Buffer : Array;
+  var BufferClass = typeof(_global.Buffer) == 'function' ? _global.Buffer : Array;
 
   // Maps for number <-> hex string conversion
   var _byteToHex = [];
@@ -1226,12 +1286,14 @@ define('feature',['implementations'], function (implementations) {
   uuid.unparse = unparse;
   uuid.BufferClass = BufferClass;
 
-  if (typeof define === 'function' && define.amd) {
-    // Publish as AMD module
-    define('uuid',[],function() {return uuid;});
-  } else if (typeof(module) != 'undefined' && module.exports) {
+  if (typeof(module) != 'undefined' && module.exports) {
     // Publish as node.js module
     module.exports = uuid;
+  } else  if (typeof define === 'function' && define.amd) {
+    // Publish as AMD module
+    define('uuid',[],function() {return uuid;});
+ 
+
   } else {
     // Publish as global (in browsers)
     var _previousRoot = _global.uuid;
@@ -1246,11 +1308,88 @@ define('feature',['implementations'], function (implementations) {
   }
 }).call(this);
 
-/*global cordova: true */
 define(
-  'api-native',['uuid'],
+  'api-web',['uuid'],
   function (uuid) {
+    
+    var API = {
+      GET_CONFIG: '/_R_/common/3/xhr/GetConfig.php',
+      GET_FORM: '/_R_/common/3/xhr/GetForm.php',
+      GET_MOJO: '/_R_/common/3/xhr/GetMoJO.php',
+      SAVE_FORM_RECORD: '/_R_/common/3/xhr/SaveFormRecord.php',
 
+      getAnswerSpaceMap: function (user) {
+        var userString = '';
+        var url;
+        if (user) {
+          userString = '&_username=' + user;
+        }
+        url = this.GET_CONFIG + '?_asn=' + window.BMP.BIC.siteVars.answerSpace.toLowerCase() + userString;
+        return $.ajax(url);
+      },
+
+      getInteractionResult: function (iact, args, options) {
+        var getargs = '';
+        if (args && typeof args === 'object') {
+          _.each(args, function (value, key) {
+            if (value) {
+              getargs += '&' + key + '=' + value;
+            }
+          });
+        }
+        return $.ajax('/_R_/common/3/xhr/GetAnswer.php?asn=' + window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '&iact=' + iact + '&ajax=false' + getargs, options);
+      },
+
+      getForm: function () {
+        var url = this.GET_FORM + '?_v=3&_aid=' + window.BMP.BIC.siteVars.answerSpaceId;
+        return Promise.resolve($.ajax(url));
+      },
+
+      getDataSuitcase: function (suitcase, time) {
+        var url = this.GET_MOJO + '?_id=' + window.BMP.BIC.siteVars.answerSpaceId + '&_m=' + suitcase;
+        return $.ajax(url, {
+          dataType: 'text',
+          headers: {
+            'If-Modified-Since': (new Date(time)).toUTCString()
+          }
+        });
+      },
+
+      setPendingItem: function (formname, formaction, formdata) {
+        var url = this.SAVE_FORM_RECORD + '?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formname + '&_action=' + formaction;
+        formdata._uuid = uuid.v4();
+        formdata._submittedTime = $.now();
+        formdata._submittedTimezoneOffset = (new Date()).getTimezoneOffset();
+        formdata._submittedTimezoneOffset /= -60;
+        return $.ajax({
+          type: "POST",
+          url: url,
+          data: formdata
+        });
+      },
+
+      getLoginStatus: function () {
+        return $.ajax('/_R_/common/3/xhr/GetLogin.php');
+      },
+
+      getFormList: function (formName) {
+        return $.ajax('/_R_/common/3/xhr/GetFormList.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formName);
+      },
+
+      getFormRecord: function (formName, formAction, recordID) {
+        return $.ajax('/_R_/common/3/xhr/GetFormRecord.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formName + '&_tid=' + recordID + '&action=' + formAction);
+      }
+
+    };
+
+    return API;
+  }
+);
+
+define(
+  'api-native',['./api-web'],
+  function (apiWeb) {
+    
     var API = {
       getAnswerSpaceMap: function (user) {
         return new Promise(function (resolve, reject) {
@@ -1264,7 +1403,7 @@ define(
             },
             reject,
             {
-              url: '/_R_/common/3/xhr/GetConfig.php?_asn=' + window.BMP.BIC.siteVars.answerSpace + userString
+              url: '/_R_/common/3/xhr/GetConfig.php?_asn=' + window.BMP.BIC.siteVars.answerSpace.toLowerCase() + userString
             }
           );
         });
@@ -1272,14 +1411,14 @@ define(
 
       getInteractionResult: function (iact, args, options) {
         var getargs = '';
-        if (args && typeof args === "object") {
+        if (args && typeof args === 'object') {
           _.each(args, function (value, key) {
             if (value) {
               getargs += '&' + key + '=' + value;
             }
           });
         }
-        return $.ajax('/_R_/common/3/xhr/GetAnswer.php?asn=' + window.BMP.BIC.siteVars.answerSpace + '&iact=' + iact + '&ajax=false' + getargs, options);
+        return $.ajax('/_R_/common/3/xhr/GetAnswer.php?asn=' + window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '&iact=' + iact + '&ajax=false' + getargs, options);
       },
 
       getForm: function () {
@@ -1296,25 +1435,19 @@ define(
         });
       },
 
-      getDataSuitcase: function (suitcase, time) {
+      getDataSuitcase: function (suitcase) {
         return new Promise(function (resolve, reject) {
           cordova.offline.retrieveContent(
             resolve,
             reject,
             {
-              url: '/_R_/common/3/xhr/GetMoJO.php?_id=' + window.BMP.BIC.siteVars.answerSpaceId + '&_m=' + suitcase
+              url: apiWeb.GET_MOJO + '?_id=' + window.BMP.BIC.siteVars.answerSpaceId + '&_m=' + suitcase
             }
           );
         });
       },
 
-      setPendingItem: function (formname, formaction, formdata) {
-        formdata._uuid = uuid.v4();
-        formdata._submittedTime = $.now();
-        formdata._submittedTimezoneOffset = (new Date()).getTimezoneOffset();
-        formdata._submittedTimezoneOffset /= -60;
-        return $.post('/_R_/common/3/xhr/SaveFormRecord.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formname + '&_action=' + formaction, formdata);
-      },
+      setPendingItem: apiWeb.setPendingItem,
 
       getLoginStatus: function () {
         return $.ajax('/_R_/common/3/xhr/GetLogin.php');
@@ -1355,89 +1488,12 @@ define(
 
 
 define(
-  'api-web',['uuid'],
-  function (uuid) {
-
-    var API = {
-      getAnswerSpaceMap: function (user) {
-        var userString = '';
-        if (user) {
-          userString = '&_username=' + user;
-        }
-        cordova.offline.retrieveContent(
-          function (data) {
-            return data;
-          },
-          reject,
-          {
-            url: '/_R_/common/3/xhr/GetConfig.php?_asn=' + window.BMP.BIC.siteVars.answerSpace + userString
-          }
-        );
-//        return $.ajax('/_R_/common/3/xhr/GetConfig.php?_asn=' + window.BMP.BIC.siteVars.answerSpace + userString);
-      },
-
-      getInteractionResult: function (iact, args, options) {
-        var getargs = '';
-        if (args && typeof args === "object") {
-          _.each(args, function (value, key) {
-            if (value) {
-              getargs += '&' + key + '=' + value;
-            }
-          });
-        }
-        return $.ajax('/_R_/common/3/xhr/GetAnswer.php?asn=' + window.BMP.BIC.siteVars.answerSpace + '&iact=' + iact + '&ajax=false' + getargs, options);
-      },
-
-      getForm: function () {
-        cordova.offline.retrieveContent(
-          function (data) {
-            return data;
-          },
-          reject,
-          {
-            url: '/_R_/common/3/xhr/GetForm.php?_v=3&_aid=' + window.BMP.BIC.siteVars.answerSpaceId
-          }
-        );
-        //return $.ajax('/_R_/common/3/xhr/GetForm.php?_v=3&_aid=' + window.BMP.BIC.siteVars.answerSpaceId);
-      },
-
-      getDataSuitcase: function (suitcase, time) {
-        return $.ajax('/_R_/common/3/xhr/GetMoJO.php?_id=' + window.BMP.BIC.siteVars.answerSpaceId + '&_m=' + suitcase, {dataType: "text"});
-      },
-
-      setPendingItem: function (formname, formaction, formdata) {
-        formdata._uuid = uuid.v4();
-        formdata._submittedTime = $.now();
-        formdata._submittedTimezoneOffset = (new Date()).getTimezoneOffset();
-        formdata._submittedTimezoneOffset /= -60;
-        return $.post('/_R_/common/3/xhr/SaveFormRecord.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formname + '&_action=' + formaction, formdata);
-      },
-
-      getLoginStatus: function () {
-        return $.ajax('/_R_/common/3/xhr/GetLogin.php');
-      },
-
-      getFormList: function (formName) {
-        return $.ajax('/_R_/common/3/xhr/GetFormList.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formName);
-      },
-
-      getFormRecord: function (formName, formAction, recordID) {
-        return $.ajax('/_R_/common/3/xhr/GetFormRecord.php?_asid=' + window.BMP.BIC.siteVars.answerSpaceId + '&_fn=' + formName + '&_tid=' + recordID + '&action=' + formAction);
-      }
-
-    };
-
-    return API;
-  }
-);
-
-define(
-  'model-interaction',['feature!api'],
-  function (API) {
-
+  'model-interaction',['facade', 'feature!api'],
+  function (facade, API) {
+    
     var Interaction = Backbone.Model.extend({
 
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       defaults: {
         header: null,
@@ -1448,19 +1504,19 @@ define(
       },
 
       inherit: function (config) {
-        if (this.has("parent")) {
-          var app = require('model-application'),
-            parent;
+        var app = require('model-application');
+        var parent;
 
+        if (this.has('parent')) {
           _.each(this.attributes, function (value, key) {
             if (!_.has(config, key) || !config[key]) {
               config[key] = value;
             }
           }, this);
 
-          if (this.get("parent") !== "app") {
+          if (this.get('parent') !== 'app') {
             // Not the answerSpace config, so go deeper
-            parent = app.interactions.get(this.get("parent"));
+            parent = app.interactions.get(this.get('parent'));
             parent.inherit(config);
           } else {
             _.each(app.attributes, function (value, key) {
@@ -1471,6 +1527,204 @@ define(
           }
         }
         return config;
+      },
+
+      prepareForView: function (data) {
+        // Handle MADL updates here
+        // Check for other updates needed here?
+        var model = this;
+
+        return new Promise(function (resolve, reject) {
+          if (model.id === window.BMP.BIC.siteVars.answerSpace.toLowerCase()) {
+            model.prepareAnswerSpace(resolve, reject, data);
+          }
+
+          if (model.get('type') === 'madl code') {
+            model.prepareMADL(resolve, reject, data);
+          }
+
+          if (model.get('type') === 'xslt' && model.get('xml').indexOf('stars:') === 0) {
+            model.set({
+              mojoType: 'stars',
+              xml: model.get('xml').replace(/^stars:/, '')
+            });
+          }
+
+          if (model.get('type') === 'xslt' && model.get('mojoType') === 'stars') {
+            model.prepareStars(resolve);
+          }
+
+          if (model.get('type') !== 'madl code' && model.id !== window.BMP.BIC.siteVars.answerSpace.toLowerCase()) {
+            resolve(model);
+          }
+
+        });
+      },
+
+      prepareAnswerSpace: function (resolve, reject, data) {
+        var model = this;
+        require(['model-application'], function (app) {
+          var homeInteraction;
+          var loginInteraction;
+          var path;
+
+          if (app.has('homeScreen') && app.get('homeScreen') !== false && app.has('homeInteraction')) {
+            homeInteraction = app.interactions.findWhere({dbid: 'i' + app.get('homeInteraction')});
+            if (homeInteraction) {
+              homeInteraction.set({parent: model.get('parent')});
+              homeInteraction.prepareForView(data).then(function () {
+                resolve(homeInteraction);
+              });
+            } else {
+              reject();
+            }
+          } else {
+            model.set({interactionList: _.map(_.filter(app.interactions.models, function (value) {
+              return value.id !== window.BMP.BIC.siteVars.answerSpace.toLowerCase() && value.get('display') !== 'hide' && (!value.has('tags') || value.has('tags') && value.get('tags').length === 0 || _.filter(value.get('tags'), function (element) {
+                return element === 'nav-' + window.BMP.BIC.siteVars.answerSpace.toLowerCase();
+              }, this).length > 0);
+            }, this), function (value) {
+              return value.attributes;
+            })});
+
+            if (model.get('interactionList').length === 0 && app.has('loginAccess') && app.get('loginAccess') === true && app.has('loginPromptInteraction')) {
+              loginInteraction = app.interactions.findWhere({dbid: 'i' + app.get('loginPromptInteraction')});
+
+              path = $.mobile.path.parseLocation().pathname;
+              if (path.slice(-1) === '/') {
+                path = path.slice(0, path.length - 1);
+              }
+
+              resolve(model);
+              $.mobile.changePage(path + '/' + loginInteraction.id);
+            } else {
+              resolve(model);
+            }
+          }
+        });
+      },
+
+      prepareMADL: function (resolve, reject, data) {
+        var model = this;
+        require(['model-application'], function (app) {
+          API.getInteractionResult(model.id, model.get('args'), data.options).then(
+            // Online
+            function (result) {
+              model.save({
+                content: result,
+                contentTime: Date.now()
+              }, {
+                success: function () {
+                  var credentials;
+                  resolve(model);
+
+                  if (app.get('loginAccess') && 'i' + app.get('loginPromptInteraction') === model.get('dbid')) {
+                    app.checkLoginStatus().then(function () {
+                      if (app.get('loginStatus') === 'LOGGED IN' && data.options.data) {
+                        credentials = model.parseAuthString(data.options.data);
+                        facade.publish('storeAuth', credentials);
+                        model.save({
+                          'content-principal': result
+                        });
+                      } else if (!model.get('args')['args[logout]']) {
+                        // Logged Out
+                        model.save({
+                          'content-anonymous': result
+                        });
+                      }
+                    });
+                  }
+                },
+                error: function () {
+                  resolve(model);
+                }
+              });
+            },
+            function (jqXHR, textStatus, errorThrown) {
+              // Offline
+              var credentials;
+
+              if (app.get('loginAccess') && 'i' + app.get('loginPromptInteraction') === model.get('dbid')) {
+                if (data.options.data) {
+                  // Offline login attempt;
+                  credentials = model.parseAuthString(data.options.data);
+                  model.listenToOnce(app, 'loginProcessed', function () {
+                    if (app.get('loginStatus') === 'LOGGED IN') {
+                      model.set('content', model.get('content-principal'));
+                    } else {
+                      model.set('content', model.get('content-anonymous'));
+                    }
+                    resolve(model);
+                  });
+                  facade.publish('authenticateAuth', credentials);
+                } else {
+                  model.set('content', model.get('content-anonymous'));
+                  resolve(model);
+                }
+              } else {
+                reject(errorThrown);
+              }
+            }
+          );
+        });
+      },
+
+      prepareStars: function (resolve) {
+        var model = this;
+        require(['model-application'], function (app) {
+          var xml;
+          var attrs;
+
+          _.each(app.stars.where({type: model.get('xml')}), function (value) {
+            xml += '<' + value.get('type') + ' id=' + value.get('_id') + '>';
+
+            attrs = _.clone(value.attributes);
+            delete attrs._id;
+            delete attrs._rev;
+            delete attrs.type;
+            delete attrs.state;
+
+            _.each(attrs, function (innerValue, key) {
+              xml += '<' + key + '>' + innerValue + '</' + key + '>';
+            });
+
+            xml += '</' + value.get('type') + '>';
+          });
+          xml = '<stars>' + xml + '</stars>';
+          model.set({
+            starXml: xml
+          });
+          resolve(model);
+        });
+      },
+
+      parseAuthString: function (authString) {
+        var credentials = {};
+        var i;
+        var split;
+        authString = authString.split('&');
+
+        for (i = 0; i < authString.length; i++) {
+          split = authString[i].split('=');
+          switch (split[0]) {
+            case 'username':
+              credentials.principal = split[1];
+              break;
+            case 'password':
+              credentials.credential = split[1];
+              break;
+            case 'submit':
+              break;
+            default:
+              credentials[split[0]] = split[1];
+          }
+          if (!credentials.expiry) {
+            // 3 day default expiry
+            credentials.expiry = 86400000 * 3;
+          }
+        }
+
+        return credentials;
       },
 
       performXSLT: function () {
@@ -1490,20 +1744,20 @@ define(
           condition,
           variable;
 
-        if (this.has("args")) {
-          args = this.get("args");
-          xsl = this.get("xsl");
+        if (this.has('args')) {
+          args = this.get('args');
+          xsl = this.get('xsl');
           placeholders = xsl.match(/\$args\[[\w\:][\w\:\-\.]*\]/g);
           pLength = placeholders ? placeholders.length : 0;
           for (p = 0; p < pLength; p = p + 1) {
             value = typeof args[placeholders[p].substring(1)] === 'string' ? args[placeholders[p].substring(1)] : '';
-            value = value.replace('"', '');
-            value = value.replace("'", '');
+            value = value.replace('', '');
+            value = value.replace('', '');
             value = decodeURIComponent(value);
             xsl = xsl.replace(placeholders[p], value);
           }
         } else {
-          xsl = this.get("xsl");
+          xsl = this.get('xsl');
         }
 
         starType = xsl.match(/blink-stars\(([@\w.]+),\W*(\w+)\W*\)/);
@@ -1511,12 +1765,12 @@ define(
           require(['model-application'], function (app) {
             var constructCondition;
 
-            constructCondition = function (starType) {
+            constructCondition = function (innerStarType) {
               condition = '';
-              variable = starType[1];
-              starType = starType[2];
-              _.each(app.stars.where({type: starType}), function (value) {
-                condition += ' or ' + variable + '=\'' + value.get("_id") + '\'';
+              variable = innerStarType[1];
+              innerStarType = innerStarType[2];
+              _.each(app.stars.where({type: innerStarType}), function (innerValue) {
+                condition += ' or ' + variable + '=\'' + innerValue.get('_id') + '\'';
               });
               condition = condition.substr(4);
               return condition;
@@ -1538,149 +1792,32 @@ define(
 
         model = this;
         require(['model-application'], function (app) {
-          xmlString = model.get("starXml") || app.datasuitcases.get(model.get("xml")).get("data");
+          xmlString = model.get('starXml') || app.datasuitcases.get(model.get('xml')).get('data');
           xslString = xsl;
           if (typeof xmlString !== 'string' || typeof xslString !== 'string') {
-            model.set("content", 'XSLT failed due to poorly formed XML or XSL.');
+            model.set('content', 'XSLT failed due to poorly formed XML or XSL.');
             return;
           }
           xml = $.parseXML(xmlString);
           xsl = $.parseXML(xslString);
           if (window.XSLTProcessor) {
-            //console.log("XSLTProcessor (W3C)");
+            //console.log('XSLTProcessor (W3C)');
             processor = new window.XSLTProcessor();
             processor.importStylesheet(xsl);
             html = processor.transformToFragment(xml, document);
           } else if (xml.transformNode !== undefined) {
-            //console.log("transformNode (IE)");
+            //console.log('transformNode (IE)');
             html = xml.transformNode(xsl);
           } else if (window.xsltProcess) {
-            //console.log("AJAXSLT");
+            //console.log('AJAXSLT');
             html = window.xsltProcess(xml, xsl);
           } else {
-            //console.log("XSLT: Not supported");
+            //console.log('XSLT: Not supported');
             html = '<p>Your browser does not support Data Suitcase keywords.</p>';
           }
           if (html) {
-            model.set("content", html);
+            model.set('content', html);
           }
-        });
-      },
-
-      prepareForView: function (data) {
-        // Handle MADL updates here
-        // Check for other updates needed here?
-        var model = this,
-          homeInteraction,
-          loginInteraction,
-          xml = '',
-          attrs,
-          path;
-
-        return new Promise(function (resolve, reject) {
-          if (model.id === window.BMP.BIC.siteVars.answerSpace) {
-            require(['model-application'], function (app) {
-              if (app.has("homeScreen") && app.get("homeScreen") !== false && app.has("homeInteraction")) {
-                homeInteraction = app.interactions.findWhere({dbid: "i" + app.get("homeInteraction")});
-                if (homeInteraction) {
-                  homeInteraction.set({parent: model.get("parent")});
-                  homeInteraction.prepareForView(data).then(function () {
-                    resolve(homeInteraction);
-                  });
-                } else {
-                  reject();
-                }
-              } else {
-                model.set({interactionList: _.map(_.filter(app.interactions.models, function (value) {
-                  return value.id !== window.BMP.BIC.siteVars.answerSpace && value.get("display") !== "hide" && (!value.has("tags") || (value.has("tags") && value.get("tags").length === 0) || _.filter(value.get("tags"), function (element) {
-                    return element === 'nav-' + window.BMP.BIC.siteVars.answerSpace.toLowerCase();
-                  }, this).length > 0);
-                }, this), function (value) {
-                  return value.attributes;
-                })});
-
-                if (model.get("interactionList").length === 0 && app.has("loginAccess") && app.get("loginAccess") === true && app.has("loginPromptInteraction")) {
-                  loginInteraction = app.interactions.findWhere({dbid: "i" + app.get("loginPromptInteraction")});
-
-                  path = $.mobile.path.parseLocation().pathname;
-                  if (path.slice(-1) === "/") {
-                    path = path.slice(0, path.length - 1);
-                  }
-
-                  resolve(model);
-                  $.mobile.changePage(path + '/' + loginInteraction.id);
-                  //if (loginInteraction) {
-                    //loginInteraction.set({parent: model.get("parent")});
-                    //loginInteraction.prepareForView(data).then(function () {
-                      //resolve(loginInteraction);
-                    //});
-                  //}
-                } else {
-                  resolve(model);
-                }
-              }
-            });
-          }
-
-          if (model.get("type") === "madl code") {
-            /*jslint unparam: true*/
-            API.getInteractionResult(model.id, model.get('args'), data.options).then(
-              function (result) {
-                model.save({
-                  content: result,
-                  contentTime: Date.now()
-                }, {
-                  success: function () {
-                    resolve(model);
-                  },
-                  error: function () {
-                    resolve(model);
-                  }
-                });
-              },
-              function (jqXHR, textStatus, errorThrown) {
-                reject(errorThrown);
-              }
-            );
-            /*jslint unparam: false*/
-          }
-
-          if (model.get("type") === "xslt" && model.get("xml").indexOf('stars:') === 0) {
-            model.set({
-              mojoType: "stars",
-              xml: model.get("xml").replace(/^stars:/, '')
-            });
-          }
-
-          if (model.get("type") === "xslt" && model.get("mojoType") === "stars") {
-            require(['model-application'], function (app) {
-              _.each(app.stars.where({type: model.get("xml")}), function (value) {
-                xml += '<' + value.get("type") + ' id="' + value.get("_id") + '">';
-
-                attrs = _.clone(value.attributes);
-                delete attrs._id;
-                delete attrs._rev;
-                delete attrs.type;
-                delete attrs.state;
-
-                _.each(attrs, function (value, key) {
-                  xml += '<' + key + '>' + value + '</' + key + '>';
-                });
-
-                xml += '</' + value.get("type") + '>';
-              });
-              xml = '<stars>' + xml + '</stars>';
-              model.set({
-                starXml: xml
-              });
-              resolve(model);
-            });
-          }
-
-          if (model.get("type") !== "madl code" && model.id !== window.BMP.BIC.siteVars.answerSpace) {
-            resolve(model);
-          }
-
         });
       }
     });
@@ -1689,12 +1826,10 @@ define(
   }
 );
 
-/*jslint unparam: true*/
-/*jslint sub:true*/ // we need to use obj['prop'] instead of obj.prop for IE8
 define(
   'data-pouch',[],
   function () {
-
+    
 
     var Data = function (name) {//, apiTrigger, apiCall, apiParameters) {
       var db;
@@ -1709,7 +1844,15 @@ define(
           return Promise.resolve(db);
         }
         return new Promise(function (resolve, reject) {
-          var pouch = new Pouch(me.dbAdapter() + me.name, function (err) {
+          var pouch;
+          Pouch.prefix = '';
+          pouch = new Pouch({
+            name: me.name,
+            adapter: me.dbAdapter(),
+            /*eslint-disable camelcase*/
+            auto_compaction: true
+            /*eslint-enable camelcase*/
+          }, function (err) {
             if (err) {
               reject(err);
             } else {
@@ -1726,9 +1869,9 @@ define(
       dbAdapter: function () {
         var type = false;
         if (window.BMP.BIC.isBlinkGap === true && Pouch.adapters.websql) {
-          type = 'websql://';
+          type = 'websql';
         } else if (Pouch.adapters.idb) {
-          type = 'idb://';
+          type = 'idb';
         }
         return type;
       },
@@ -1736,6 +1879,9 @@ define(
       create: function (model) {
         var that = this;
         return new Promise(function (resolve, reject) {
+          if (!model.toJSON) {
+            return reject('Invalid model');
+          }
           that.getDB().then(function (db) {
             db.post(model.toJSON(), function (err, response) {
               if (err) {
@@ -1753,6 +1899,9 @@ define(
       update: function (model) {
         var that = this;
         return new Promise(function (resolve, reject) {
+          if (!model.toJSON) {
+            return reject('Invalid model');
+          }
           that.getDB().then(function (db) {
             db.put(model.toJSON(), function (err) {
               if (err) {
@@ -1770,6 +1919,9 @@ define(
       read: function (model) {
         var that = this;
         return new Promise(function (resolve, reject) {
+          if (!model.id) {
+            return reject('Invalid model');
+          }
           that.getDB().then(function (db) {
             db.get(model.id, function (err, doc) {
               if (err) {
@@ -1786,7 +1938,9 @@ define(
         var that = this;
         return new Promise(function (resolve, reject) {
           that.getDB().then(function (db) {
+            /*eslint-disable camelcase*/
             db.allDocs({include_docs: true}, function (err, response) {
+              /*eslint-enable camelcase*/
               if (err) {
                 reject(err);
               } else {
@@ -1802,16 +1956,19 @@ define(
       'delete': function (model) {
         var that = this;
         return new Promise(function (resolve, reject) {
+          if (!model.id) {
+            return reject('Invalid model');
+          }
           that.getDB().then(function (db) {
             db.get(model.id, function (err, doc) {
               if (err) {
                 reject(err);
               } else {
-                db.remove(doc, function (err, doc) {
-                  if (err) {
-                    reject(err);
+                db.remove(doc, function (innerErr, innerDoc) {
+                  if (innerErr) {
+                    reject(innerErr);
                   } else {
-                    resolve(doc);
+                    resolve(innerDoc);
                   }
                 });
               }
@@ -1821,16 +1978,18 @@ define(
       },
 
       deleteAll: function () {
-        var data;
-        data = this;
+        var that = this;
 
         return new Promise(function (resolve, reject) {
-          Pouch.destroy(data.dbAdapter() + data.name, function (err, info) {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
+          that.getDB().then(function (db) {
+            db.destroy(function (err) {
+              if (err) {
+                reject(err);
+              } else {
+                that.db = null;
+                resolve();
+              }
+            });
           });
         });
       }
@@ -1841,11 +2000,10 @@ define(
 );
 
 
-/*jslint sub:true*/ // we need to use obj['prop'] instead of obj.prop for IE8
 define(
   'data-inMemory',[],
   function () {
-
+    
 
     var Data = function () {
       this.data = {};
@@ -1880,13 +2038,13 @@ define(
 define(
   'collection-interactions',['model-interaction', 'feature!data'],
   function (Interaction, Data) {
-
+    
     var InteractionCollection = Backbone.Collection.extend({
 
       model: Interaction,
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-Interaction');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-Interaction');
         return this;
       },
 
@@ -1912,7 +2070,7 @@ define(
         }));
       },
 
-      comparator: "order"
+      comparator: 'order'
 
     });
 
@@ -1923,16 +2081,16 @@ define(
 define(
   'model-datasuitcase',['feature!api'],
   function (API) {
-
+    
     var DataSuitcase = Backbone.Model.extend({
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       populate: function () {
         var model = this,
           time = 0;
 
-        if (this.has("contentTime")) {
-          time = this.get("contentTime");
+        if (this.has('contentTime')) {
+          time = this.get('contentTime');
         }
 
         return new Promise(function (resolve, reject) {
@@ -1957,22 +2115,22 @@ define(
 define(
   'collection-datasuitcases',['model-datasuitcase', 'feature!data'],
   function (DataSuitcase, Data) {
-
+    
     var DataSuitcaseCollection = Backbone.Collection.extend({
       model: DataSuitcase,
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-DataSuitcase');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-DataSuitcase');
         return this;
       },
 
       load: function () {
         var collection = this;
 
-        return new Promise(function (resolve, reject) {
+        return new Promise(function (resolve) {
           collection.fetch({
             success: resolve,
-            error: reject
+            error: resolve
           });
         });
       },
@@ -1995,9 +2153,9 @@ define(
 define(
   'model-form',['feature!api'],
   function (API) {
-
+    
     var Form = Backbone.Model.extend({
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       populate: function () {
         var model = this;
@@ -2016,11 +2174,10 @@ define(
   }
 );
 
-/*jslint sub:true*/ // we need to use obj['prop'] instead of obj.prop for IE8
 define(
   'collection-forms',['model-form', 'feature!data', 'feature!api'],
   function (Form, Data, API) {
-
+    
     var FormCollection = Backbone.Collection.extend({
       model: Form,
 
@@ -2028,9 +2185,12 @@ define(
         if (!BlinkForms) {
           window.BlinkForms = {};
         }
+
         BlinkForms.getDefinition = function (name, action) {
-          return new Promise(function (resolve, reject) {
-            require(['model-application'], function (app) {
+          var app = require('model-application');
+          return app.forms.whenUpdated()
+          .then(function () {
+            return new Promise(function (resolve, reject) {
               var def = app.forms.get(name);
 
               if (!def) {
@@ -2045,10 +2205,19 @@ define(
             });
           });
         };
+
+        setTimeout(function () {
+          if (BlinkForms.blobUploader) {
+            BlinkForms.blobUploader.setXHR();
+            BlinkForms.blobUploader.setEndpoint('/_R_/common/3/xhr/SaveFormBlob.php');
+          }
+        }, 197);
+
+
       },
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-Form');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-Form');
         return this;
       },
 
@@ -2063,6 +2232,17 @@ define(
         });
       },
 
+      whenUpdated: function () {
+        if (this.whenUpdated._promise) {
+          return this.whenUpdated._promise;
+        }
+
+        this.whenUpdated._promise = this.download()
+        .then(null, function () { return Promise.resolve(); });
+
+        return this.whenUpdated._promise;
+      },
+
       download: function () {
         var collection = this;
 
@@ -2070,14 +2250,14 @@ define(
           return Promise.resolve();
         }
 
-        API.getForm().then(function (data) {
+        return API.getForm().then(function (data) {
           _.each(data, function (recordData) {
             var record = JSON.parse(recordData),
-              preExisting = collection.findWhere({_id: record['default'].name});
+              preExisting = collection.findWhere({_id: record.default.name});
             if (preExisting) {
               preExisting.set(record).save();
             } else {
-              record._id = record['default'].name;
+              record._id = record.default.name;
               collection.create(record);
             }
           });
@@ -2092,9 +2272,9 @@ define(
 define(
   'model-pending',[],
   function () {
-
+    
     var PendingItem = Backbone.Model.extend({
-      idAttribute: "_id"
+      idAttribute: '_id'
     });
 
     return PendingItem;
@@ -2104,12 +2284,12 @@ define(
 define(
   'collection-pending',['model-pending', 'feature!data', 'feature!api'],
   function (PendingItem, Data, API) {
-
+    
     var PendingCollection = Backbone.Collection.extend({
       model: PendingItem,
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-Pending');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-Pending');
         return this;
       },
 
@@ -2127,28 +2307,28 @@ define(
       processQueue: function () {
         var promises, callback;
         promises = [];
-        /*jslint unparam: true*/
-        callback = function (element, callback) {
+        callback = function (element, innerCallback) {
           return function (data, status, xhr) {
+            var errors;
+
             if (data && xhr.status === 200) {
               element.save({
                 status: 'Submitted',
                 result: data
               });
             } else if (status === 'error' && data.responseText) {
-              var errors = JSON.parse(data.responseText);
+              errors = JSON.parse(data.responseText);
               element.save({
                 status: 'Failed Validation',
                 errors: errors
               });
             }
             element.trigger('processed');
-            callback();
+            innerCallback();
           };
         };
-        /*jslint unparam: false*/
 
-        _.each(this.where({status: "Pending"}), function (element) {
+        _.each(this.where({status: 'Pending'}), function (element) {
           promises.push(new Promise(function (resolve, reject) {
             API.setPendingItem(element.get('name'), element.get('action'), element.get('data')).then(
               callback(element, resolve),
@@ -2168,9 +2348,9 @@ define(
 define(
   'model-star',[],
   function () {
-
+    
     var Star = Backbone.Model.extend({
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       initialize: function () {
         this.on('add', function () {
@@ -2180,13 +2360,13 @@ define(
 
       toggle: function () {
         var model = this;
-        if (model.get("state")) {
-          this.set("state", false);
+        if (model.get('state')) {
+          this.set('state', false);
         } else {
-          this.set("state", true);
+          this.set('state', true);
         }
         require(['model-application'], function (app) {
-          if (model.get("state")) {
+          if (model.get('state')) {
             app.stars.add(model);
           } else {
             model.destroy();
@@ -2202,12 +2382,12 @@ define(
 define(
   'collection-stars',['model-star', 'feature!data'],
   function (Star, Data) {
-
+    
     var FormCollection = Backbone.Collection.extend({
       model: Star,
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-Star');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-Star');
         return this;
       },
 
@@ -2244,7 +2424,7 @@ define(
 
 
 define('domReady',[],function () {
-
+    
 
     var isTop, testDiv, scrollIntervalId,
         isBrowser = typeof window !== "undefined" && window.document,
@@ -2365,9 +2545,9 @@ define('domReady',[],function () {
 define(
   'model-form-record',['feature!api'],
   function (API) {
-
+    
     var FormRecord = Backbone.Model.extend({
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       populate: function (action, callback) {
         var model = this;
@@ -2401,16 +2581,15 @@ define(
   }
 );
 
-
 define(
   'collection-form-records',['model-form-record', 'feature!data', 'feature!api'],
   function (FormRecord, Data, API) {
-
+    
     var FormRecordCollection = Backbone.Collection.extend({
       model: FormRecord,
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-FormRecord');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-FormRecord');
         return this;
       },
 
@@ -2470,23 +2649,21 @@ define(
   }
 );
 
-
-/*globals pollUntil*/
 define(
-  'model-application',['collection-interactions', 'collection-datasuitcases', 'collection-forms', 'collection-pending', 'feature!data', 'feature!api', 'collection-stars', 'domReady', 'collection-form-records'],
-  function (InteractionCollection, DataSuitcaseCollection, FormCollection, PendingCollection, Data, API, StarsCollection, domReady, FormRecordsCollection) {
-
+  'model-application',['facade', 'collection-interactions', 'collection-datasuitcases', 'collection-forms', 'collection-pending', 'feature!data', 'feature!api', 'collection-stars', 'domReady', 'collection-form-records'],
+  function (facade, InteractionCollection, DataSuitcaseCollection, FormCollection, PendingCollection, Data, API, StarsCollection, domReady, FormRecordsCollection) {
+    
     var Application = Backbone.Model.extend({
 
-      idAttribute: "_id",
+      idAttribute: '_id',
 
       defaults: {
-        _id: window.BMP.BIC.siteVars.answerSpace,
+        _id: window.BMP.BIC.siteVars.answerSpace.toLowerCase(),
         loginStatus: false
       },
 
       datastore: function () {
-        this.data = new Data(window.BMP.BIC.siteVars.answerSpace + '-AnswerSpace');
+        this.data = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-AnswerSpace');
         return this;
       },
 
@@ -2504,21 +2681,90 @@ define(
             return !!app.data;
           }, null, function () {
             // now data is safe to use, so we can get started
+
+            if (BMP.Authentication) {
+              app.meta = new Data(window.BMP.BIC.siteVars.answerSpace.toLowerCase() + '-Meta');
+              BMP.Authentication.getRecord = function (callback) {
+                app.meta.read({
+                  id: 'offlineLogin'
+                }).then(
+                  function (data) {
+                    callback(null, data.attributes);
+                  },
+                  function (err) {
+                    callback(err);
+                  }
+                );
+              };
+              BMP.Authentication.setRecord = function (data, callback) {
+                var model = {};
+                model.id = 'offlineLogin';
+                model.toJSON = function () {
+                  return model.attributes;
+                };
+                model.attributes = data;
+                model.attributes._id = model.id;
+
+                app.meta.read({
+                  id: model.id
+                }).then(
+                  function () {
+                    app.meta.delete({
+                      id: model.id
+                    }).then(
+                      function () {
+                        app.meta.create(model).then(
+                          function (document) {
+                            callback(null, document);
+                          },
+                          function (err) {
+                            callback(err);
+                          }
+                        );
+                      },
+                      function (err) {
+                        callback(err);
+                      }
+                    );
+                  },
+                  function () {
+                    app.meta.create(model).then(
+                      function (document) {
+                        callback(null, document);
+                      },
+                      function (err) {
+                        callback(err);
+                      }
+                    );
+                  }
+                );
+              };
+            }
+
             app.interactions = app.interactions || new InteractionCollection();
             app.datasuitcases = app.datasuitcases || new DataSuitcaseCollection();
             app.forms = app.forms || new FormCollection();
-            app.pending = app.pending || new PendingCollection();
             app.stars = app.stars || new StarsCollection();
             app.formRecords = app.formRecords || new FormRecordsCollection();
 
-            Promise.all([
-              app.interactions.datastore().load(),
-              app.datasuitcases.datastore().load(),
-              app.forms.datastore().load(),
-              app.pending.datastore().load(),
-              app.stars.datastore().load(),
-              app.formRecords.datastore().load()
-            ]).then(resolve, reject);
+            if (app.hasStorage()) {
+              // enable the pending queue
+              app.pending = app.pending || new PendingCollection();
+
+              // prime models / collections with previous persisted data
+              Promise.all([
+                app.interactions.datastore().load(),
+                app.datasuitcases.datastore().load(),
+                app.forms.datastore().load(),
+                app.pending.datastore().load(),
+                app.stars.datastore().load(),
+                app.formRecords.datastore().load()
+              ]).then(resolve, reject);
+
+            } else {
+              resolve();
+            }
+
           });
         });
 
@@ -2527,6 +2773,16 @@ define(
 
       setup: function () {
         var app = this;
+
+        facade.subscribe('applicationModel', 'loggedIn', function () {
+          app.set('loginStatus', 'LOGGED IN');
+          app.trigger('loginProcessed');
+        });
+
+        facade.subscribe('applicationModel', 'loggedOut', function () {
+          app.set('loginStatus', 'LOGGED OUT');
+          app.trigger('loginProcessed');
+        });
 
         return new Promise(function (resolve, reject) {
           app.fetch({
@@ -2552,6 +2808,16 @@ define(
           })
           .then(
             function (data) {
+              if (data && typeof data === 'string') {
+                try {
+                  data = JSON.parse(data);
+                } catch (err) {
+                  /*eslint-disable no-console*/
+                  console.error('unable to parse answerSpace map');
+                  console.error(err);
+                  /*eslint-enable no-console*/
+                }
+              }
               return Promise.all(_.compact(_.map(data, function (value, key) {
                 var model;
                 if (key.substr(0, 1) === 'c' || key.substr(0, 1) === 'i') {
@@ -2598,28 +2864,31 @@ define(
           )
           .then(
             function () {
-              return Promise.all(_.map(_.compact(_.uniq(app.interactions.pluck('xml'))), function (element) {
-                return new Promise(function (resolve) { // args.[1] 'reject'
-                  if (!app.datasuitcases.get(element)) {
-                    app.datasuitcases.add({_id: element});
-                    app.datasuitcases.get(element).populate().then(resolve, resolve);
-                  } else {
-                    app.datasuitcases.get(element).populate().then(resolve, resolve);
-                  }
-                });
-              }));
-            }
-          )
-          .then(
-            function () {
-              return app.datasuitcases.save();
-            }
-          )
-          .then(
-            function () {
+              app.forms.whenUpdated();
+              app.retrieveDataSuitcasesForInteractions();
               return app.interactions.save();
             }
           );
+      },
+
+      retrieveDataSuitcasesForInteractions: function () {
+        var app = this;
+        return Promise.all(
+          _.map(_.compact(_.uniq(app.interactions.pluck('xml'))),
+          function (element) {
+            return new Promise(function (resolve) { // args.[1] 'reject'
+              if (!app.datasuitcases.get(element)) {
+                app.datasuitcases.add({_id: element});
+                app.datasuitcases.get(element).populate().then(resolve, resolve);
+              } else {
+                app.datasuitcases.get(element).populate().then(resolve, resolve);
+              }
+            });
+          })
+        )
+        .then(function () {
+          return app.datasuitcases.save();
+        });
       },
 
       whenPopulated: function () {
@@ -2665,7 +2934,8 @@ define(
 
       initialRender: function () {
         var app = this;
-        $.mobile.defaultPageTransition = app.get("defaultTransition");
+
+        $.mobile.defaultPageTransition = app.get('defaultTransition');
         domReady(function () {
           $.mobile.changePage($.mobile.path.parseLocation().href, {
             changeHash: false,
@@ -2679,7 +2949,26 @@ define(
             $('#temp').remove();
           });
         });
+      },
+
+      hasStorage: function () {
+        if (typeof Pouch === 'undefined') {
+          return false;
+        }
+        if (window.BMP.BIC.isBlinkGap === true && Pouch.adapters.websql) {
+          return true;
+        }
+        if (Pouch.adapters.idb) {
+          try {
+            return Modernizr.indexeddb && window.indexedDB.open('idbTest', 1).onupgradeneeded === null && navigator.userAgent.indexOf('iPhone') === -1 && navigator.userAgent.indexOf('iPad') === -1;
+          } catch (ignore) {
+            return false;
+          }
+          return false;
+        }
+        return false;
       }
+
     });
 
     window.BMP.BIC3 = new Application();
@@ -2690,7 +2979,7 @@ define(
       window.BMP.BIC3.history.length += 1;
     };
 
-    window.BMP.BIC3.version = '3.1.22';
+    window.BMP.BIC3.version = '3.2.4';
 
     // keep BMP.BIC and BMP.BIC3 the same
     $.extend(window.BMP.BIC3, window.BMP.BIC);
@@ -2700,34 +2989,158 @@ define(
   }
 );
 
-/*jslint browser:true, indent:2, nomen:true*/
-/*global requirejs, require, define, module*/
-/*global $, cordova*/
-/*jslint sub:true*/ // we need to use obj['prop'] instead of obj.prop for IE8
-define(
-  'main',['model-application'],
-  function (app) {
+function q(a){throw a;}var s=void 0,u=!1;var sjcl={cipher:{},hash:{},keyexchange:{},mode:{},misc:{},codec:{},exception:{corrupt:function(a){this.toString=function(){return"CORRUPT: "+this.message};this.message=a},invalid:function(a){this.toString=function(){return"INVALID: "+this.message};this.message=a},bug:function(a){this.toString=function(){return"BUG: "+this.message};this.message=a},notReady:function(a){this.toString=function(){return"NOT READY: "+this.message};this.message=a}}};
+"undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define('sjcl',[],function(){return sjcl});
+sjcl.cipher.aes=function(a){this.k[0][0][0]||this.D();var b,c,d,e,f=this.k[0][4],g=this.k[1];b=a.length;var h=1;4!==b&&(6!==b&&8!==b)&&q(new sjcl.exception.invalid("invalid aes key size"));this.b=[d=a.slice(0),e=[]];for(a=b;a<4*b+28;a++){c=d[a-1];if(0===a%b||8===b&&4===a%b)c=f[c>>>24]<<24^f[c>>16&255]<<16^f[c>>8&255]<<8^f[c&255],0===a%b&&(c=c<<8^c>>>24^h<<24,h=h<<1^283*(h>>7));d[a]=d[a-b]^c}for(b=0;a;b++,a--)c=d[b&3?a:a-4],e[b]=4>=a||4>b?c:g[0][f[c>>>24]]^g[1][f[c>>16&255]]^g[2][f[c>>8&255]]^g[3][f[c&
+255]]};
+sjcl.cipher.aes.prototype={encrypt:function(a){return w(this,a,0)},decrypt:function(a){return w(this,a,1)},k:[[[],[],[],[],[]],[[],[],[],[],[]]],D:function(){var a=this.k[0],b=this.k[1],c=a[4],d=b[4],e,f,g,h=[],l=[],k,n,m,p;for(e=0;0x100>e;e++)l[(h[e]=e<<1^283*(e>>7))^e]=e;for(f=g=0;!c[f];f^=k||1,g=l[g]||1){m=g^g<<1^g<<2^g<<3^g<<4;m=m>>8^m&255^99;c[f]=m;d[m]=f;n=h[e=h[k=h[f]]];p=0x1010101*n^0x10001*e^0x101*k^0x1010100*f;n=0x101*h[m]^0x1010100*m;for(e=0;4>e;e++)a[e][f]=n=n<<24^n>>>8,b[e][m]=p=p<<24^p>>>8}for(e=
+0;5>e;e++)a[e]=a[e].slice(0),b[e]=b[e].slice(0)}};
+function w(a,b,c){4!==b.length&&q(new sjcl.exception.invalid("invalid aes block size"));var d=a.b[c],e=b[0]^d[0],f=b[c?3:1]^d[1],g=b[2]^d[2];b=b[c?1:3]^d[3];var h,l,k,n=d.length/4-2,m,p=4,t=[0,0,0,0];h=a.k[c];a=h[0];var r=h[1],v=h[2],y=h[3],z=h[4];for(m=0;m<n;m++)h=a[e>>>24]^r[f>>16&255]^v[g>>8&255]^y[b&255]^d[p],l=a[f>>>24]^r[g>>16&255]^v[b>>8&255]^y[e&255]^d[p+1],k=a[g>>>24]^r[b>>16&255]^v[e>>8&255]^y[f&255]^d[p+2],b=a[b>>>24]^r[e>>16&255]^v[f>>8&255]^y[g&255]^d[p+3],p+=4,e=h,f=l,g=k;for(m=0;4>
+m;m++)t[c?3&-m:m]=z[e>>>24]<<24^z[f>>16&255]<<16^z[g>>8&255]<<8^z[b&255]^d[p++],h=e,e=f,f=g,g=b,b=h;return t}
+sjcl.bitArray={bitSlice:function(a,b,c){a=sjcl.bitArray.P(a.slice(b/32),32-(b&31)).slice(1);return c===s?a:sjcl.bitArray.clamp(a,c-b)},extract:function(a,b,c){var d=Math.floor(-b-c&31);return((b+c-1^b)&-32?a[b/32|0]<<32-d^a[b/32+1|0]>>>d:a[b/32|0]>>>d)&(1<<c)-1},concat:function(a,b){if(0===a.length||0===b.length)return a.concat(b);var c=a[a.length-1],d=sjcl.bitArray.getPartial(c);return 32===d?a.concat(b):sjcl.bitArray.P(b,d,c|0,a.slice(0,a.length-1))},bitLength:function(a){var b=a.length;return 0===
+b?0:32*(b-1)+sjcl.bitArray.getPartial(a[b-1])},clamp:function(a,b){if(32*a.length<b)return a;a=a.slice(0,Math.ceil(b/32));var c=a.length;b&=31;0<c&&b&&(a[c-1]=sjcl.bitArray.partial(b,a[c-1]&2147483648>>b-1,1));return a},partial:function(a,b,c){return 32===a?b:(c?b|0:b<<32-a)+0x10000000000*a},getPartial:function(a){return Math.round(a/0x10000000000)||32},equal:function(a,b){if(sjcl.bitArray.bitLength(a)!==sjcl.bitArray.bitLength(b))return u;var c=0,d;for(d=0;d<a.length;d++)c|=a[d]^b[d];return 0===
+c},P:function(a,b,c,d){var e;e=0;for(d===s&&(d=[]);32<=b;b-=32)d.push(c),c=0;if(0===b)return d.concat(a);for(e=0;e<a.length;e++)d.push(c|a[e]>>>b),c=a[e]<<32-b;e=a.length?a[a.length-1]:0;a=sjcl.bitArray.getPartial(e);d.push(sjcl.bitArray.partial(b+a&31,32<b+a?c:d.pop(),1));return d},l:function(a,b){return[a[0]^b[0],a[1]^b[1],a[2]^b[2],a[3]^b[3]]},byteswapM:function(a){var b,c;for(b=0;b<a.length;++b)c=a[b],a[b]=c>>>24|c>>>8&0xff00|(c&0xff00)<<8|c<<24;return a}};
+sjcl.codec.utf8String={fromBits:function(a){var b="",c=sjcl.bitArray.bitLength(a),d,e;for(d=0;d<c/8;d++)0===(d&3)&&(e=a[d/4]),b+=String.fromCharCode(e>>>24),e<<=8;return decodeURIComponent(escape(b))},toBits:function(a){a=unescape(encodeURIComponent(a));var b=[],c,d=0;for(c=0;c<a.length;c++)d=d<<8|a.charCodeAt(c),3===(c&3)&&(b.push(d),d=0);c&3&&b.push(sjcl.bitArray.partial(8*(c&3),d));return b}};
+sjcl.codec.hex={fromBits:function(a){var b="",c;for(c=0;c<a.length;c++)b+=((a[c]|0)+0xf00000000000).toString(16).substr(4);return b.substr(0,sjcl.bitArray.bitLength(a)/4)},toBits:function(a){var b,c=[],d;a=a.replace(/\s|0x/g,"");d=a.length;a+="00000000";for(b=0;b<a.length;b+=8)c.push(parseInt(a.substr(b,8),16)^0);return sjcl.bitArray.clamp(c,4*d)}};
+sjcl.codec.base64={J:"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",fromBits:function(a,b,c){var d="",e=0,f=sjcl.codec.base64.J,g=0,h=sjcl.bitArray.bitLength(a);c&&(f=f.substr(0,62)+"-_");for(c=0;6*d.length<h;)d+=f.charAt((g^a[c]>>>e)>>>26),6>e?(g=a[c]<<6-e,e+=26,c++):(g<<=6,e-=6);for(;d.length&3&&!b;)d+="=";return d},toBits:function(a,b){a=a.replace(/\s|=/g,"");var c=[],d,e=0,f=sjcl.codec.base64.J,g=0,h;b&&(f=f.substr(0,62)+"-_");for(d=0;d<a.length;d++)h=f.indexOf(a.charAt(d)),
+0>h&&q(new sjcl.exception.invalid("this isn't base64!")),26<e?(e-=26,c.push(g^h>>>e),g=h<<32-e):(e+=6,g^=h<<32-e);e&56&&c.push(sjcl.bitArray.partial(e&56,g,1));return c}};sjcl.codec.base64url={fromBits:function(a){return sjcl.codec.base64.fromBits(a,1,1)},toBits:function(a){return sjcl.codec.base64.toBits(a,1)}};sjcl.hash.sha256=function(a){this.b[0]||this.D();a?(this.r=a.r.slice(0),this.o=a.o.slice(0),this.h=a.h):this.reset()};sjcl.hash.sha256.hash=function(a){return(new sjcl.hash.sha256).update(a).finalize()};
+sjcl.hash.sha256.prototype={blockSize:512,reset:function(){this.r=this.N.slice(0);this.o=[];this.h=0;return this},update:function(a){"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));var b,c=this.o=sjcl.bitArray.concat(this.o,a);b=this.h;a=this.h=b+sjcl.bitArray.bitLength(a);for(b=512+b&-512;b<=a;b+=512)x(this,c.splice(0,16));return this},finalize:function(){var a,b=this.o,c=this.r,b=sjcl.bitArray.concat(b,[sjcl.bitArray.partial(1,1)]);for(a=b.length+2;a&15;a++)b.push(0);b.push(Math.floor(this.h/
+4294967296));for(b.push(this.h|0);b.length;)x(this,b.splice(0,16));this.reset();return c},N:[],b:[],D:function(){function a(a){return 0x100000000*(a-Math.floor(a))|0}var b=0,c=2,d;a:for(;64>b;c++){for(d=2;d*d<=c;d++)if(0===c%d)continue a;8>b&&(this.N[b]=a(Math.pow(c,0.5)));this.b[b]=a(Math.pow(c,1/3));b++}}};
+function x(a,b){var c,d,e,f=b.slice(0),g=a.r,h=a.b,l=g[0],k=g[1],n=g[2],m=g[3],p=g[4],t=g[5],r=g[6],v=g[7];for(c=0;64>c;c++)16>c?d=f[c]:(d=f[c+1&15],e=f[c+14&15],d=f[c&15]=(d>>>7^d>>>18^d>>>3^d<<25^d<<14)+(e>>>17^e>>>19^e>>>10^e<<15^e<<13)+f[c&15]+f[c+9&15]|0),d=d+v+(p>>>6^p>>>11^p>>>25^p<<26^p<<21^p<<7)+(r^p&(t^r))+h[c],v=r,r=t,t=p,p=m+d|0,m=n,n=k,k=l,l=d+(k&n^m&(k^n))+(k>>>2^k>>>13^k>>>22^k<<30^k<<19^k<<10)|0;g[0]=g[0]+l|0;g[1]=g[1]+k|0;g[2]=g[2]+n|0;g[3]=g[3]+m|0;g[4]=g[4]+p|0;g[5]=g[5]+t|0;g[6]=
+g[6]+r|0;g[7]=g[7]+v|0}
+sjcl.mode.ccm={name:"ccm",encrypt:function(a,b,c,d,e){var f,g=b.slice(0),h=sjcl.bitArray,l=h.bitLength(c)/8,k=h.bitLength(g)/8;e=e||64;d=d||[];7>l&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(f=2;4>f&&k>>>8*f;f++);f<15-l&&(f=15-l);c=h.clamp(c,8*(15-f));b=sjcl.mode.ccm.L(a,b,c,d,e,f);g=sjcl.mode.ccm.p(a,g,c,b,e,f);return h.concat(g.data,g.tag)},decrypt:function(a,b,c,d,e){e=e||64;d=d||[];var f=sjcl.bitArray,g=f.bitLength(c)/8,h=f.bitLength(b),l=f.clamp(b,h-e),k=f.bitSlice(b,
+h-e),h=(h-e)/8;7>g&&q(new sjcl.exception.invalid("ccm: iv must be at least 7 bytes"));for(b=2;4>b&&h>>>8*b;b++);b<15-g&&(b=15-g);c=f.clamp(c,8*(15-b));l=sjcl.mode.ccm.p(a,l,c,k,e,b);a=sjcl.mode.ccm.L(a,l.data,c,d,e,b);f.equal(l.tag,a)||q(new sjcl.exception.corrupt("ccm: tag doesn't match"));return l.data},L:function(a,b,c,d,e,f){var g=[],h=sjcl.bitArray,l=h.l;e/=8;(e%2||4>e||16<e)&&q(new sjcl.exception.invalid("ccm: invalid tag length"));(0xffffffff<d.length||0xffffffff<b.length)&&q(new sjcl.exception.bug("ccm: can't deal with 4GiB or more data"));
+f=[h.partial(8,(d.length?64:0)|e-2<<2|f-1)];f=h.concat(f,c);f[3]|=h.bitLength(b)/8;f=a.encrypt(f);if(d.length){c=h.bitLength(d)/8;65279>=c?g=[h.partial(16,c)]:0xffffffff>=c&&(g=h.concat([h.partial(16,65534)],[c]));g=h.concat(g,d);for(d=0;d<g.length;d+=4)f=a.encrypt(l(f,g.slice(d,d+4).concat([0,0,0])))}for(d=0;d<b.length;d+=4)f=a.encrypt(l(f,b.slice(d,d+4).concat([0,0,0])));return h.clamp(f,8*e)},p:function(a,b,c,d,e,f){var g,h=sjcl.bitArray;g=h.l;var l=b.length,k=h.bitLength(b);c=h.concat([h.partial(8,
+f-1)],c).concat([0,0,0]).slice(0,4);d=h.bitSlice(g(d,a.encrypt(c)),0,e);if(!l)return{tag:d,data:[]};for(g=0;g<l;g+=4)c[3]++,e=a.encrypt(c),b[g]^=e[0],b[g+1]^=e[1],b[g+2]^=e[2],b[g+3]^=e[3];return{tag:d,data:h.clamp(b,k)}}};
+sjcl.mode.ocb2={name:"ocb2",encrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));var g,h=sjcl.mode.ocb2.H,l=sjcl.bitArray,k=l.l,n=[0,0,0,0];c=h(a.encrypt(c));var m,p=[];d=d||[];e=e||64;for(g=0;g+4<b.length;g+=4)m=b.slice(g,g+4),n=k(n,m),p=p.concat(k(c,a.encrypt(k(c,m)))),c=h(c);m=b.slice(g);b=l.bitLength(m);g=a.encrypt(k(c,[0,0,0,b]));m=l.clamp(k(m.concat([0,0,0]),g),b);n=k(n,k(m.concat([0,0,0]),g));n=a.encrypt(k(n,k(c,h(c))));d.length&&
+(n=k(n,f?d:sjcl.mode.ocb2.pmac(a,d)));return p.concat(l.concat(m,l.clamp(n,e)))},decrypt:function(a,b,c,d,e,f){128!==sjcl.bitArray.bitLength(c)&&q(new sjcl.exception.invalid("ocb iv must be 128 bits"));e=e||64;var g=sjcl.mode.ocb2.H,h=sjcl.bitArray,l=h.l,k=[0,0,0,0],n=g(a.encrypt(c)),m,p,t=sjcl.bitArray.bitLength(b)-e,r=[];d=d||[];for(c=0;c+4<t/32;c+=4)m=l(n,a.decrypt(l(n,b.slice(c,c+4)))),k=l(k,m),r=r.concat(m),n=g(n);p=t-32*c;m=a.encrypt(l(n,[0,0,0,p]));m=l(m,h.clamp(b.slice(c),p).concat([0,0,0]));
+k=l(k,m);k=a.encrypt(l(k,l(n,g(n))));d.length&&(k=l(k,f?d:sjcl.mode.ocb2.pmac(a,d)));h.equal(h.clamp(k,e),h.bitSlice(b,t))||q(new sjcl.exception.corrupt("ocb: tag doesn't match"));return r.concat(h.clamp(m,p))},pmac:function(a,b){var c,d=sjcl.mode.ocb2.H,e=sjcl.bitArray,f=e.l,g=[0,0,0,0],h=a.encrypt([0,0,0,0]),h=f(h,d(d(h)));for(c=0;c+4<b.length;c+=4)h=d(h),g=f(g,a.encrypt(f(h,b.slice(c,c+4))));c=b.slice(c);128>e.bitLength(c)&&(h=f(h,d(h)),c=e.concat(c,[-2147483648,0,0,0]));g=f(g,c);return a.encrypt(f(d(f(h,
+d(h))),g))},H:function(a){return[a[0]<<1^a[1]>>>31,a[1]<<1^a[2]>>>31,a[2]<<1^a[3]>>>31,a[3]<<1^135*(a[0]>>>31)]}};
+sjcl.mode.gcm={name:"gcm",encrypt:function(a,b,c,d,e){var f=b.slice(0);b=sjcl.bitArray;d=d||[];a=sjcl.mode.gcm.p(!0,a,f,d,c,e||128);return b.concat(a.data,a.tag)},decrypt:function(a,b,c,d,e){var f=b.slice(0),g=sjcl.bitArray,h=g.bitLength(f);e=e||128;d=d||[];e<=h?(b=g.bitSlice(f,h-e),f=g.bitSlice(f,0,h-e)):(b=f,f=[]);a=sjcl.mode.gcm.p(u,a,f,d,c,e);g.equal(a.tag,b)||q(new sjcl.exception.corrupt("gcm: tag doesn't match"));return a.data},Z:function(a,b){var c,d,e,f,g,h=sjcl.bitArray.l;e=[0,0,0,0];f=b.slice(0);
+for(c=0;128>c;c++){(d=0!==(a[Math.floor(c/32)]&1<<31-c%32))&&(e=h(e,f));g=0!==(f[3]&1);for(d=3;0<d;d--)f[d]=f[d]>>>1|(f[d-1]&1)<<31;f[0]>>>=1;g&&(f[0]^=-0x1f000000)}return e},g:function(a,b,c){var d,e=c.length;b=b.slice(0);for(d=0;d<e;d+=4)b[0]^=0xffffffff&c[d],b[1]^=0xffffffff&c[d+1],b[2]^=0xffffffff&c[d+2],b[3]^=0xffffffff&c[d+3],b=sjcl.mode.gcm.Z(b,a);return b},p:function(a,b,c,d,e,f){var g,h,l,k,n,m,p,t,r=sjcl.bitArray;m=c.length;p=r.bitLength(c);t=r.bitLength(d);h=r.bitLength(e);g=b.encrypt([0,
+0,0,0]);96===h?(e=e.slice(0),e=r.concat(e,[1])):(e=sjcl.mode.gcm.g(g,[0,0,0,0],e),e=sjcl.mode.gcm.g(g,e,[0,0,Math.floor(h/0x100000000),h&0xffffffff]));h=sjcl.mode.gcm.g(g,[0,0,0,0],d);n=e.slice(0);d=h.slice(0);a||(d=sjcl.mode.gcm.g(g,h,c));for(k=0;k<m;k+=4)n[3]++,l=b.encrypt(n),c[k]^=l[0],c[k+1]^=l[1],c[k+2]^=l[2],c[k+3]^=l[3];c=r.clamp(c,p);a&&(d=sjcl.mode.gcm.g(g,h,c));a=[Math.floor(t/0x100000000),t&0xffffffff,Math.floor(p/0x100000000),p&0xffffffff];d=sjcl.mode.gcm.g(g,d,a);l=b.encrypt(e);d[0]^=l[0];
+d[1]^=l[1];d[2]^=l[2];d[3]^=l[3];return{tag:r.bitSlice(d,0,f),data:c}}};sjcl.misc.hmac=function(a,b){this.M=b=b||sjcl.hash.sha256;var c=[[],[]],d,e=b.prototype.blockSize/32;this.n=[new b,new b];a.length>e&&(a=b.hash(a));for(d=0;d<e;d++)c[0][d]=a[d]^909522486,c[1][d]=a[d]^1549556828;this.n[0].update(c[0]);this.n[1].update(c[1]);this.G=new b(this.n[0])};
+sjcl.misc.hmac.prototype.encrypt=sjcl.misc.hmac.prototype.mac=function(a){this.Q&&q(new sjcl.exception.invalid("encrypt on already updated hmac called!"));this.update(a);return this.digest(a)};sjcl.misc.hmac.prototype.reset=function(){this.G=new this.M(this.n[0]);this.Q=u};sjcl.misc.hmac.prototype.update=function(a){this.Q=!0;this.G.update(a)};sjcl.misc.hmac.prototype.digest=function(){var a=this.G.finalize(),a=(new this.M(this.n[1])).update(a).finalize();this.reset();return a};
+sjcl.misc.pbkdf2=function(a,b,c,d,e){c=c||1E3;(0>d||0>c)&&q(sjcl.exception.invalid("invalid params to pbkdf2"));"string"===typeof a&&(a=sjcl.codec.utf8String.toBits(a));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));e=e||sjcl.misc.hmac;a=new e(a);var f,g,h,l,k=[],n=sjcl.bitArray;for(l=1;32*k.length<(d||1);l++){e=f=a.encrypt(n.concat(b,[l]));for(g=1;g<c;g++){f=a.encrypt(f);for(h=0;h<f.length;h++)e[h]^=f[h]}k=k.concat(e)}d&&(k=n.clamp(k,d));return k};
+sjcl.prng=function(a){this.c=[new sjcl.hash.sha256];this.i=[0];this.F=0;this.s={};this.C=0;this.K={};this.O=this.d=this.j=this.W=0;this.b=[0,0,0,0,0,0,0,0];this.f=[0,0,0,0];this.A=s;this.B=a;this.q=u;this.w={progress:{},seeded:{}};this.m=this.V=0;this.t=1;this.u=2;this.S=0x10000;this.I=[0,48,64,96,128,192,0x100,384,512,768,1024];this.T=3E4;this.R=80};
+sjcl.prng.prototype={randomWords:function(a,b){var c=[],d;d=this.isReady(b);var e;d===this.m&&q(new sjcl.exception.notReady("generator isn't seeded"));if(d&this.u){d=!(d&this.t);e=[];var f=0,g;this.O=e[0]=(new Date).valueOf()+this.T;for(g=0;16>g;g++)e.push(0x100000000*Math.random()|0);for(g=0;g<this.c.length&&!(e=e.concat(this.c[g].finalize()),f+=this.i[g],this.i[g]=0,!d&&this.F&1<<g);g++);this.F>=1<<this.c.length&&(this.c.push(new sjcl.hash.sha256),this.i.push(0));this.d-=f;f>this.j&&(this.j=f);this.F++;
+this.b=sjcl.hash.sha256.hash(this.b.concat(e));this.A=new sjcl.cipher.aes(this.b);for(d=0;4>d&&!(this.f[d]=this.f[d]+1|0,this.f[d]);d++);}for(d=0;d<a;d+=4)0===(d+1)%this.S&&A(this),e=B(this),c.push(e[0],e[1],e[2],e[3]);A(this);return c.slice(0,a)},setDefaultParanoia:function(a,b){0===a&&"Setting paranoia=0 will ruin your security; use it only for testing"!==b&&q("Setting paranoia=0 will ruin your security; use it only for testing");this.B=a},addEntropy:function(a,b,c){c=c||"user";var d,e,f=(new Date).valueOf(),
+g=this.s[c],h=this.isReady(),l=0;d=this.K[c];d===s&&(d=this.K[c]=this.W++);g===s&&(g=this.s[c]=0);this.s[c]=(this.s[c]+1)%this.c.length;switch(typeof a){case "number":b===s&&(b=1);this.c[g].update([d,this.C++,1,b,f,1,a|0]);break;case "object":c=Object.prototype.toString.call(a);if("[object Uint32Array]"===c){e=[];for(c=0;c<a.length;c++)e.push(a[c]);a=e}else{"[object Array]"!==c&&(l=1);for(c=0;c<a.length&&!l;c++)"number"!==typeof a[c]&&(l=1)}if(!l){if(b===s)for(c=b=0;c<a.length;c++)for(e=a[c];0<e;)b++,
+e>>>=1;this.c[g].update([d,this.C++,2,b,f,a.length].concat(a))}break;case "string":b===s&&(b=a.length);this.c[g].update([d,this.C++,3,b,f,a.length]);this.c[g].update(a);break;default:l=1}l&&q(new sjcl.exception.bug("random: addEntropy only supports number, array of numbers or string"));this.i[g]+=b;this.d+=b;h===this.m&&(this.isReady()!==this.m&&C("seeded",Math.max(this.j,this.d)),C("progress",this.getProgress()))},isReady:function(a){a=this.I[a!==s?a:this.B];return this.j&&this.j>=a?this.i[0]>this.R&&
+(new Date).valueOf()>this.O?this.u|this.t:this.t:this.d>=a?this.u|this.m:this.m},getProgress:function(a){a=this.I[a?a:this.B];return this.j>=a?1:this.d>a?1:this.d/a},startCollectors:function(){this.q||(this.a={loadTimeCollector:D(this,this.aa),mouseCollector:D(this,this.ba),keyboardCollector:D(this,this.$),accelerometerCollector:D(this,this.U),touchCollector:D(this,this.da)},window.addEventListener?(window.addEventListener("load",this.a.loadTimeCollector,u),window.addEventListener("mousemove",this.a.mouseCollector,
+u),window.addEventListener("keypress",this.a.keyboardCollector,u),window.addEventListener("devicemotion",this.a.accelerometerCollector,u),window.addEventListener("touchmove",this.a.touchCollector,u)):document.attachEvent?(document.attachEvent("onload",this.a.loadTimeCollector),document.attachEvent("onmousemove",this.a.mouseCollector),document.attachEvent("keypress",this.a.keyboardCollector)):q(new sjcl.exception.bug("can't attach event")),this.q=!0)},stopCollectors:function(){this.q&&(window.removeEventListener?
+(window.removeEventListener("load",this.a.loadTimeCollector,u),window.removeEventListener("mousemove",this.a.mouseCollector,u),window.removeEventListener("keypress",this.a.keyboardCollector,u),window.removeEventListener("devicemotion",this.a.accelerometerCollector,u),window.removeEventListener("touchmove",this.a.touchCollector,u)):document.detachEvent&&(document.detachEvent("onload",this.a.loadTimeCollector),document.detachEvent("onmousemove",this.a.mouseCollector),document.detachEvent("keypress",
+this.a.keyboardCollector)),this.q=u)},addEventListener:function(a,b){this.w[a][this.V++]=b},removeEventListener:function(a,b){var c,d,e=this.w[a],f=[];for(d in e)e.hasOwnProperty(d)&&e[d]===b&&f.push(d);for(c=0;c<f.length;c++)d=f[c],delete e[d]},$:function(){E(1)},ba:function(a){var b,c;try{b=a.x||a.clientX||a.offsetX||0,c=a.y||a.clientY||a.offsetY||0}catch(d){c=b=0}0!=b&&0!=c&&sjcl.random.addEntropy([b,c],2,"mouse");E(0)},da:function(a){a=a.touches[0]||a.changedTouches[0];sjcl.random.addEntropy([a.pageX||
+a.clientX,a.pageY||a.clientY],1,"touch");E(0)},aa:function(){E(2)},U:function(a){a=a.accelerationIncludingGravity.x||a.accelerationIncludingGravity.y||a.accelerationIncludingGravity.z;if(window.orientation){var b=window.orientation;"number"===typeof b&&sjcl.random.addEntropy(b,1,"accelerometer")}a&&sjcl.random.addEntropy(a,2,"accelerometer");E(0)}};function C(a,b){var c,d=sjcl.random.w[a],e=[];for(c in d)d.hasOwnProperty(c)&&e.push(d[c]);for(c=0;c<e.length;c++)e[c](b)}
+function E(a){"undefined"!==typeof window&&window.performance&&"function"===typeof window.performance.now?sjcl.random.addEntropy(window.performance.now(),a,"loadtime"):sjcl.random.addEntropy((new Date).valueOf(),a,"loadtime")}function A(a){a.b=B(a).concat(B(a));a.A=new sjcl.cipher.aes(a.b)}function B(a){for(var b=0;4>b&&!(a.f[b]=a.f[b]+1|0,a.f[b]);b++);return a.A.encrypt(a.f)}function D(a,b){return function(){b.apply(a,arguments)}}sjcl.random=new sjcl.prng(6);
+a:try{var F,G,H,I;if(I="undefined"!==typeof module){var J;if(J=module.exports){var K;try{K=require("crypto")}catch(L){K=null}J=(G=K)&&G.randomBytes}I=J}if(I)F=G.randomBytes(128),F=new Uint32Array((new Uint8Array(F)).buffer),sjcl.random.addEntropy(F,1024,"crypto['randomBytes']");else if("undefined"!==typeof window&&"undefined"!==typeof Uint32Array){H=new Uint32Array(32);if(window.crypto&&window.crypto.getRandomValues)window.crypto.getRandomValues(H);else if(window.msCrypto&&window.msCrypto.getRandomValues)window.msCrypto.getRandomValues(H);
+else break a;sjcl.random.addEntropy(H,1024,"crypto['getRandomValues']")}}catch(M){"undefined"!==typeof window&&window.console&&(console.log("There was an error collecting entropy from the browser:"),console.log(M))}
+sjcl.json={defaults:{v:1,iter:1E3,ks:128,ts:64,mode:"ccm",adata:"",cipher:"aes"},Y:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json,f=e.e({iv:sjcl.random.randomWords(4,0)},e.defaults),g;e.e(f,c);c=f.adata;"string"===typeof f.salt&&(f.salt=sjcl.codec.base64.toBits(f.salt));"string"===typeof f.iv&&(f.iv=sjcl.codec.base64.toBits(f.iv));(!sjcl.mode[f.mode]||!sjcl.cipher[f.cipher]||"string"===typeof a&&100>=f.iter||64!==f.ts&&96!==f.ts&&128!==f.ts||128!==f.ks&&192!==f.ks&&0x100!==f.ks||2>f.iv.length||4<
+f.iv.length)&&q(new sjcl.exception.invalid("json encrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,f),a=g.key.slice(0,f.ks/32),f.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.publicKey&&(g=a.kem(),f.kemtag=g.tag,a=g.key.slice(0,f.ks/32));"string"===typeof b&&(b=sjcl.codec.utf8String.toBits(b));"string"===typeof c&&(f.adata=c=sjcl.codec.utf8String.toBits(c));g=new sjcl.cipher[f.cipher](a);e.e(d,f);d.key=a;f.ct=sjcl.mode[f.mode].encrypt(g,b,f.iv,c,f.ts);return f},
+encrypt:function(a,b,c,d){var e=sjcl.json,f=e.Y.apply(e,arguments);return e.encode(f)},X:function(a,b,c,d){c=c||{};d=d||{};var e=sjcl.json;b=e.e(e.e(e.e({},e.defaults),b),c,!0);var f,g;f=b.adata;"string"===typeof b.salt&&(b.salt=sjcl.codec.base64.toBits(b.salt));"string"===typeof b.iv&&(b.iv=sjcl.codec.base64.toBits(b.iv));(!sjcl.mode[b.mode]||!sjcl.cipher[b.cipher]||"string"===typeof a&&100>=b.iter||64!==b.ts&&96!==b.ts&&128!==b.ts||128!==b.ks&&192!==b.ks&&0x100!==b.ks||!b.iv||2>b.iv.length||4<b.iv.length)&&
+q(new sjcl.exception.invalid("json decrypt: invalid parameters"));"string"===typeof a?(g=sjcl.misc.cachedPbkdf2(a,b),a=g.key.slice(0,b.ks/32),b.salt=g.salt):sjcl.ecc&&a instanceof sjcl.ecc.elGamal.secretKey&&(a=a.unkem(sjcl.codec.base64.toBits(b.kemtag)).slice(0,b.ks/32));"string"===typeof f&&(f=sjcl.codec.utf8String.toBits(f));g=new sjcl.cipher[b.cipher](a);f=sjcl.mode[b.mode].decrypt(g,b.ct,b.iv,f,b.ts);e.e(d,b);d.key=a;return 1===c.raw?f:sjcl.codec.utf8String.fromBits(f)},decrypt:function(a,b,
+c,d){var e=sjcl.json;return e.X(a,e.decode(b),c,d)},encode:function(a){var b,c="{",d="";for(b in a)if(a.hasOwnProperty(b))switch(b.match(/^[a-z0-9]+$/i)||q(new sjcl.exception.invalid("json encode: invalid property name")),c+=d+'"'+b+'":',d=",",typeof a[b]){case "number":case "boolean":c+=a[b];break;case "string":c+='"'+escape(a[b])+'"';break;case "object":c+='"'+sjcl.codec.base64.fromBits(a[b],0)+'"';break;default:q(new sjcl.exception.bug("json encode: unsupported type"))}return c+"}"},decode:function(a){a=
+a.replace(/\s/g,"");a.match(/^\{.*\}$/)||q(new sjcl.exception.invalid("json decode: this isn't json!"));a=a.replace(/^\{|\}$/g,"").split(/,/);var b={},c,d;for(c=0;c<a.length;c++)(d=a[c].match(/^\s*(?:(["']?)([a-z][a-z0-9]*)\1)\s*:\s*(?:(-?\d+)|"([a-z0-9+\/%*_.@=\-]*)"|(true|false))$/i))||q(new sjcl.exception.invalid("json decode: this isn't json!")),d[3]?b[d[2]]=parseInt(d[3],10):d[4]?b[d[2]]=d[2].match(/^(ct|adata|salt|iv)$/)?sjcl.codec.base64.toBits(d[4]):unescape(d[4]):d[5]&&(b[d[2]]="true"===
+d[5]);return b},e:function(a,b,c){a===s&&(a={});if(b===s)return a;for(var d in b)b.hasOwnProperty(d)&&(c&&(a[d]!==s&&a[d]!==b[d])&&q(new sjcl.exception.invalid("required parameter overridden")),a[d]=b[d]);return a},fa:function(a,b){var c={},d;for(d in a)a.hasOwnProperty(d)&&a[d]!==b[d]&&(c[d]=a[d]);return c},ea:function(a,b){var c={},d;for(d=0;d<b.length;d++)a[b[d]]!==s&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.ca={};
+sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.ca,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=b.salt===s?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 
+/*eslint-env amd*/
+define(
+  'authentication',['sjcl'], function (sjcl) {
+    
+
+    var Authentication = function (options) {
+      options = options || {};
+      this.getRecord = options.getRecord || null;
+      this.setRecord = options.setRecord || null;
+    };
+
+    Authentication.prototype.getCurrent = function (onSuccess, onError) {
+      this.getRecord(function(err, data) {
+        if (err) {
+          return onError(err);
+        }
+
+        if (!data) {
+          return onSuccess(null);
+        }
+
+        if (data.expiry < new Date()) {
+          return onSuccess(null);
+        }
+
+        if (data.principal && data.expiry) {
+          data = {
+            principal: data.principal,
+            expiry: data.expiry
+          };
+        }
+
+        onSuccess(data);
+      });
+    };
+
+    Authentication.prototype.setCurrent = function (data, onSuccess, onError) {
+      if (!data.principal || !data.credential || !data.expiry) {
+        return onError(new Error('Missing required attribute(s)'));
+      }
+
+      data.credential = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(data.credential));
+
+      this.setRecord(data, function () {
+        onSuccess();
+      });
+    };
+
+    Authentication.prototype.authenticate = function (data, onSuccess, onError) {
+      if (!data.principal || !data.credential) {
+        return onError(new Error('Missing required attribute(s)'));
+      }
+
+      var hashedCredential = sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(data.credential));
+
+      this.getRecord(function (err, cached) {
+        if (err) {
+          return onError(err);
+        }
+
+        if (!cached) {
+          return onSuccess(null);
+        }
+
+        if (cached.expiry < new Date()) {
+          return onSuccess(null);
+        }
+
+        if (data.principal === cached.principal &&
+          hashedCredential === cached.credential) {
+            onSuccess({
+              principal: cached.principal,
+              expiry: cached.expiry
+            });
+          }
+      });
+    };
+
+    return Authentication;
+  }
+);
+
+define(
+  'main',['model-application', 'authentication'],
+  function (app, Auth) {
+    
 
     function start() {
       // AJAX Default Options
-      /*jslint unparam: true*/
       $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
         jqXHR.setRequestHeader('X-Blink-Config',
           JSON.stringify(window.BMP.BIC.siteVars));
       });
-      /*jslint unparam: false*/
 
-      require(['router']);
-    }
+      window.BMP.Authentication = new Auth();
 
-    // Delay the app for Cordova
-    function init() {
-      if (window.BMP.BlinkGap.isHere()) {
-        window.BMP.BlinkGap.whenReady().then(start, start);
-      } else {
-        start();
-      }
+      require(['router', 'auth']);
     }
 
     // Save traditional sync method as ajaxSync
@@ -2739,20 +3152,20 @@ define(
       data = model.data || model.collection.data;
 
       switch (method) {
-      case "read":
+      case 'read':
         promise = model.id !== undefined ? data.read(model) : data.readAll();
         break;
-      case "create":
+      case 'create':
         promise = data.create(model);
         break;
-      case "update":
+      case 'update':
         promise = data.update(model);
         break;
-      case "patch":
+      case 'patch':
         promise = data.update(model);
         break;
-      case "delete":
-        promise = data['delete'](model);
+      case 'delete':
+        promise = data.delete(model);
         break;
       default:
         promise = Promise.reject(new Error('unknown method'));
@@ -2775,18 +3188,27 @@ define(
 
     // Fallback to traditional sync when not specified
     Backbone.getSyncMethod = function (model) {
-      if (model.data || (model.collection && model.collection.data)) {
+      if (model.data || model.collection && model.collection.data) {
         return Backbone.dataSync;
       }
       return Backbone.ajaxSync;
     };
 
-    // Hook Backbone.sync up to the data layer
-    Backbone.sync = function (method, model, options) {
-      return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
-    };
+    if (app.hasStorage()) {
+      // Hook Backbone.sync up to the data layer
+      Backbone.sync = function (method, model, options) {
+        return Backbone.getSyncMethod(model).apply(this, [method, model, options]);
+      };
+    } else {
+      Backbone.sync = function (method, model, options) { options.success(); };
+    }
 
-    init();
+    if (window.BMP.BlinkGap.isHere()) {
+      // Delay the app for Cordova
+      window.BMP.BlinkGap.whenReady().then(start, start);
+    } else {
+      start();
+    }
 
     return app; // export BMP.BIC
   }
@@ -2803,7 +3225,7 @@ define(
   java, location, Components, FileUtils */
 
 define('text',['module'], function (module) {
-
+    
 
     var text, fs, Cc, Ci, xpcIsWindows,
         progIds = ['Msxml2.XMLHTTP', 'Microsoft.XMLHTTP', 'Msxml2.XMLHTTP.4.0'],
@@ -3193,16 +3615,31 @@ define('text!template-inputPrompt.mustache',[],function () { return '<form metho
 define('text!template-form-controls.mustache',[],function () { return '{{#pages}}\n<div id="FormPageCount" data-role="controlgroup" data-type="horizontal">\n  <a id="previousFormPage" data-role="button" data-icon="back" {{^previous}}class="ui-disable"{{/previous}} style="width: 32%" data-iconpos="left">&nbsp;</a>\n  <a data-role="button" style="width: 33%"><span id="currentPage">{{current}}</span> of <span id="totalPages">{{total}}</span></a>\n  <a id="nextFormPage" data-role="button" data-icon="forward" {{^next}}class="ui-disable"{{/next}} style="width: 32%" data-iconpos="right">&nbsp;</a>\n</div>\n{{/pages}}\n\n<div id="FormControls" data-role="controlgroup" data-type="horizontal" style="width: 100%;">\n    <a id="close" data-role="button" data-icon="delete" data-iconpos="top" style="width: 49%;">Close</a>\n    <a id="submit" data-role="button" data-icon="check" data-iconpos="top" style="width: 49%;">Submit</a>\n</div>\n\n<div id="closePopup" data-role="popup" data-dismissible="false" data-overlay-theme="a" data-theme="c">\n  <div data-role="header">\n    <h1>Close</h1>\n  </div>\n  <div data-role="content">\n    <h3>Are you sure you want to close this form?</h3>\n    <div data-role="controlgroup" data-type="horizontal" style="width: 100%;">\n      <a href="#" id="save" data-role="button" data-rel="save" style="width: 49%;">Save</a>\n      <a href="#" id="discard" data-role="button" data-rel="delete" style="width: 49%;">Discard</a>\n    </div>\n    <a data-role="button" data-rel="back">Cancel</a>\n  </div>\n</div>\n';});
 
 define(
-  'view-form-controls',['text!template-form-controls.mustache', 'model-application'],
-  function (Template, app) {
+  'view-form-controls',['text!template-form-controls.mustache', 'model-application', 'feature!api'],
+  function (Template, app, API) {
+    
+
+    var isHTML = function (string) {
+      var html$;
+      if (!string || typeof string !== 'string' || !string.trim()) {
+        return false;
+      }
+      if (typeof Node === 'undefined' || !Node.TEXT_NODE) {
+        return true; // the string _might_ be HTML, we just can't tell
+      }
+      html$ = $.parseHTML(string);
+      return !html$.every(function (el) {
+        return el.nodeType === Node.TEXT_NODE;
+      });
+    };
 
     var FormControlView = Backbone.View.extend({
 
       events: {
-        "click #FormControls #submit" : "formSubmit",
-        "click #FormControls #close" : "formClose",
-        "click #nextFormPage" : "nextFormPage",
-        "click #previousFormPage" : "previousFormPage"
+        'click #FormControls #submit': 'formSubmit',
+        'click #FormControls #close': 'formClose',
+        'click #nextFormPage': 'nextFormPage',
+        'click #previousFormPage': 'previousFormPage'
       },
 
       render: function () {
@@ -3259,8 +3696,67 @@ define(
         view.render();
       },
 
+      formLeave: function () {
+        if (window.BMP.BIC3.history.length === 0) {
+          window.BMP.BIC3.view.home();
+        } else {
+          history.back();
+        }
+      },
+
       formSubmit: function () {
-        this.addToQueue("Pending");
+        var me = this;
+        var model = this.model;
+        if (app.hasStorage()) {
+          this.addToQueue('Pending');
+        } else {
+          $.mobile.loading('show');
+          BlinkForms.current.data()
+          .then(function (data) {
+            return API.setPendingItem(
+              model.get('blinkFormObjectName'),
+              model.get('blinkFormAction'),
+              data
+            );
+          })
+          .then(function (data) {
+            if (!isHTML(data)) {
+              data = '<p>' + data + '</p>';
+            }
+            app.view.popup(data);
+            $('#popup').one('popupafterclose', function () {
+              window.console.log('popupafterclose');
+              me.formLeave();
+            });
+          }, function (jqXHR) {
+            var status = jqXHR.status;
+            var json;
+            var html = '';
+            try {
+              json = JSON.parse(jqXHR.responseText);
+            } catch (ignore) {
+              json = { message: 'error ' + status };
+            }
+            if (json.message) {
+              html += json.message;
+            }
+            if (status === 470 || status === 471 || json.errors) {
+              if (typeof json.errors === 'object') {
+                html += '<ul>';
+                Object.keys(json.errors).forEach(function (key) {
+                  html += '<li>' + key + ': ' + json.errors[key] + '</li>';
+                });
+                html += '</ul>';
+              }
+            }
+            if (!isHTML(html)) {
+              html = '<p>' + html + '</p>';
+            }
+            app.view.popup(html);
+          }).then(function () {
+            $.mobile.loading('hide');
+          });
+        }
       },
 
       formClose: function () {
@@ -3279,66 +3775,80 @@ define(
       },
 
       formSave: function (e) {
+        var me = this;
         e.data.view.addToQueue('Draft');
         $('#closePopup').one('popupafterclose', function () {
-          history.back();
+          me.formLeave();
         });
         $('#closePopup').popup('close');
       },
 
       formDiscard: function () {
+        var me = this;
         $('#closePopup').one('popupafterclose', function () {
-          history.back();
+          me.formLeave();
         });
         $('#closePopup').popup('close');
       },
 
-      addToQueue: function (status) {
-        var view, model;
+      addToQueue: function (status, supressQueue) {
+        var view = this;
+        var model;
+        supressQueue = supressQueue || false;
 
-        view = this;
-        BlinkForms.current.data().then(function (data) {
-          data._action = view.model.get("blinkFormAction");
-          var modelAttrs = {
-            type: "Form",
-            status: status,
-            name: view.model.get("blinkFormObjectName"),
-            label: view.model.get('displayName'),
-            action: view.model.get("blinkFormAction"),
-            answerspaceid: app.get("dbid"),
-            data: data
-          };
-          if (view.model.get('args')['args[pid]']) {
-            model = app.pending.get(view.model.get('args')['args[pid]']);
-            model.save(modelAttrs);
-          } else {
-            model = app.pending.create(modelAttrs);
-          }
-          $(window).one("pagechange", function () {
-            if (!navigator.onLine || model.get('status') === 'Draft') {
-              app.view.pendingQueue();
+        return new Promise(function (resolve, reject) {
+          BlinkForms.current.data().then(function (data) {
+            var modelAttrs;
+            var options = {};
+
+            options.success = function (updatedModel) {
+              if (!supressQueue) {
+                $(window).one('pagechange', function () {
+                  if (!navigator.onLine || model.get('status') === 'Draft') {
+                    app.view.pendingQueue();
+                  } else {
+                    model.once('processed', function () {
+                      var result = model.get('result');
+                      if (model.get('status') === 'Submitted') {
+                        if (!isHTML(result)) {
+                          data = '<p>' + result + '</p>';
+                        }
+                        app.view.popup(result);
+                        model.destroy();
+                      } else {
+                        app.view.pendingQueue();
+                      }
+                    });
+                    app.pending.processQueue();
+                  }
+                });
+
+                view.formLeave();
+              }
+              resolve(updatedModel);
+            };
+
+            options.error = reject;
+
+            data._action = view.model.get('blinkFormAction');
+            modelAttrs = {
+              type: 'Form',
+              status: status,
+              name: view.model.get('blinkFormObjectName'),
+              label: view.model.get('displayName'),
+              action: view.model.get('blinkFormAction'),
+              answerspaceid: app.get('dbid'),
+              data: data
+            };
+            if (view.model.get('args')['args[pid]']) {
+              model = app.pending.get(view.model.get('args')['args[pid]']);
+              model.save(modelAttrs, options);
             } else {
-              model.once('processed', function () {
-                if (model.get('status') === 'Submitted') {
-                  app.view.popup(model.get('result'));
-                  model.destroy();
-                } else {
-                  app.view.pendingQueue();
-                }
-              });
-              app.pending.processQueue();
+              model = app.pending.create(modelAttrs, options);
             }
           });
-
-          if (window.BMP.BIC3.history.length === 0) {
-            window.BMP.BIC3.view.home();
-          } else {
-            history.back();
-          }
-
         });
       }
-
     });
 
     return FormControlView;
@@ -3348,41 +3858,44 @@ define(
 define(
   'view-form-action',['model-application', 'view-form-controls'],
   function (app, FormControls) {
-
+    
     var FormActionView = Backbone.View.extend({
       id: 'ActiveFormContainer',
 
       render: function () {
-        var view = this, subView;
+        var view = this;
 
-        BlinkForms.getDefinition(view.model.get("blinkFormObjectName"), view.model.get("blinkFormAction"))
+        BlinkForms.getDefinition(view.model.get('blinkFormObjectName'), view.model.get('blinkFormAction'))
           .then(function (definition) {
-            BlinkForms.initialize(definition, view.model.get("blinkFormAction"));
+            var formRecord;
+
+            BlinkForms.initialize(definition, view.model.get('blinkFormAction'));
             view.$el.append(BlinkForms.current.$form);
-            subView = new FormControls({
+            view.subView = new FormControls({
               model: view.model
             });
-            subView.render();
-            view.$el.append(subView.$el);
+            view.subView.render();
+            view.$el.append(view.subView.$el);
 
-            if (view.model.get("args")['args[id]']) {
-              var formRecord;
-              formRecord = app.formRecords.get(view.model.get("blinkFormObjectName") + '-' + view.model.get("args")['args[id]']);
-              formRecord.populate(view.model.get("blinkFormAction"), function () {
+            if (view.model.get('args')['args[id]']) {
+              formRecord = app.formRecords.get(view.model.get('blinkFormObjectName') + '-' + view.model.get('args')['args[id]']);
+              formRecord.populate(view.model.get('blinkFormAction'), function () {
                 BlinkForms.current.setRecord(formRecord.get('record'));
-                view.trigger("render");
+                view.trigger('render');
               });
-            } else if (view.model.get("args")['args[pid]']) {
-              BlinkForms.current.setRecord(app.pending.get(view.model.get("args")['args[pid]']).get("data"));
+            } else if (view.model.get('args')['args[pid]']) {
+              BlinkForms.current.setRecord(app.pending.get(view.model.get('args')['args[pid]']).get('data'));
               if (BlinkForms.current.getErrors) {
                 BlinkForms.current.getErrors();
               }
-              view.trigger("render");
+              view.trigger('render');
             } else {
-              view.trigger("render");
+              view.trigger('render');
             }
           })
           .then(null, function (err) {
+            view.$el.append('<p>Error: unable to display this form. Try again later.</p>');
+            view.trigger('render');
             window.console.log(err);
           });
 
@@ -3400,30 +3913,28 @@ define('text!template-form-list.mustache',[],function () { return '<table data-r
 define(
   'view-form-list',['text!template-form-list.mustache', 'model-application'],
   function (Template, app) {
-
+    
     var FormListView = Backbone.View.extend({
       render: function () {
         var view = this;
 
-        app.formRecords.pull(view.model.get("blinkFormObjectName")).then(
+        app.formRecords.pull(view.model.get('blinkFormObjectName')).then(
           function () {
             var templateData = {};
             templateData.headers = [];
-            BlinkForms.getDefinition(view.model.get("blinkFormObjectName"), view.model.get("blinkFormAction")).then(function (definition) {
+            BlinkForms.getDefinition(view.model.get('blinkFormObjectName'), view.model.get('blinkFormAction')).then(function (definition) {
               var elements = [];
-              /*jslint unparam: true */
-              _.each(definition._elements, function (value, ik) {
+              _.each(definition._elements, function (value) {
                 if (value.type !== 'subForm') {
                   elements.push(value.name);
                   templateData.headers.push(value.name);
                 }
               });
-              /*jslint unparam: false */
 
               templateData.content = _.map(app.formRecords.models, function (value) {
                 var record = {};
 
-                record.id = value.get("id");
+                record.id = value.get('id');
                 record.contents = [];
 
                 _.each(value.attributes.list, function (iv, ik) {
@@ -3437,16 +3948,16 @@ define(
 
               templateData.interactions = {};
               templateData.interactions.edit = app.interactions.findWhere({
-                blinkFormObjectName: view.model.get("blinkFormObjectName"),
-                blinkFormAction: "edit"
+                blinkFormObjectName: view.model.get('blinkFormObjectName'),
+                blinkFormAction: 'edit'
               }).id;
               templateData.interactions.view = app.interactions.findWhere({
-                blinkFormObjectName: view.model.get("blinkFormObjectName"),
-                blinkFormAction: "view"
+                blinkFormObjectName: view.model.get('blinkFormObjectName'),
+                blinkFormAction: 'view'
               }).id;
-              templateData.interactions['delete'] = app.interactions.findWhere({
-                blinkFormObjectName: view.model.get("blinkFormObjectName"),
-                blinkFormAction: "delete"
+              templateData.interactions.delete = app.interactions.findWhere({
+                blinkFormObjectName: view.model.get('blinkFormObjectName'),
+                blinkFormAction: 'delete'
               }).id;
 
               view.$el.html(Mustache.render(Template, templateData));
@@ -3468,43 +3979,38 @@ define(
   }
 );
 
-;
-define("view-form-search", function(){});
-
 define(
-  'view-form',['view-form-action', 'view-form-list', 'view-form-search'],
-  function (FormAction, FormList, FormSearch) {
-
+  'view-form',['view-form-action', 'view-form-list'],
+  function (FormAction, FormList) {
+    
     var FormView = Backbone.View.extend({
       render: function () {
-        var view, action, subView;
+        var view, action;
 
         view = this;
-        action = view.model.get("blinkFormAction");
+        action = view.model.get('blinkFormAction');
 
-        if (action === "list") {
-          subView = new FormList({
+        if (action === 'list') {
+          view.subView = new FormList({
             model: view.model
           });
-        } else if (action === "search") {
-          subView = new FormSearch({
-            model: view.model
-          });
+        } else if (action === 'search') {
+          view.subView = null;
         } else {
           if ($('#ActiveFormContainer').length > 0) {
             $('#ActiveFormContainer').attr('id', 'FormContainer');
           }
-          subView = new FormAction({
+          view.subView = new FormAction({
             model: view.model
           });
         }
 
-        view.listenToOnce(subView, 'render', function () {
-          view.$el.append(subView.$el);
+        view.listenToOnce(view.subView, 'render', function () {
+          view.$el.append(view.subView.$el);
           view.trigger('render');
         });
 
-        subView.render();
+        view.subView.render();
 
         return view;
       }
@@ -3515,8 +4021,6 @@ define(
 );
 
 
-
-
 define('text!template-category-list.mustache',[],function () { return '<ul data-role="listview">\n  {{#models}}\n  <li>\n    <a interaction="{{_id}}">\n      {{#displayName}}\n        {{displayName}}\n      {{/displayName}}\n      {{^displayName}}\n        {{_id}}\n      {{/displayName}}\n    </a>\n  </li>\n  {{/models}}\n</ul>\n';});
 
 
@@ -3525,14 +4029,14 @@ define('text!template-pending.mustache',[],function () { return '<div id="pendin
 define(
   'view-star',[],
   function () {
-
+    
     var StarView = Backbone.View.extend({
       events: {
-        "click": "toggle"
+        'click': 'toggle'
       },
 
       initialize: function () {
-        this.listenTo(this.model, "change:state", this.render);
+        this.listenTo(this.model, 'change:state', this.render);
       },
 
       toggle: function (e) {
@@ -3555,64 +4059,202 @@ define(
   }
 );
 
+
 define('text!template-popup.mustache',[],function () { return '<div id="popup" data-role="popup">\n{{{contents}}}\n</div>\n\n';});
 
 
 define('text!template-clear-confirmation-popup.mustache',[],function () { return '<div id="clearConfirmationPopup" data-role="popup">\n  <div data-role="header">\n    <h1>Clear All Drafts</h1>\n  </div>\n  <div data-role="content">\n    <h3>Are you sure you want to delete all drafts?</h3>\n    <div data-role="controlgroup" data-type="horizontal" style="width: 100%;">\n      <a href="#" id="clearPendingItems" data-role="button" style="width: 49%;">Delete</a>\n      <a href="#" data-role="button" data-rel="back" style="width: 49%;">Cancel</a>\n    </div>\n  </div>\n</div>\n';});
 
-/*global google: true */
+/*globals $:false*/
+// UMD: https://github.com/umdjs/umd/blob/master/returnExports.js
+(function (root, factory) {
+  
+  if (typeof define === 'function' && define.amd) {
+    define('geolocation',[], factory);
+  } else if (typeof exports === 'object') {
+    module.exports = factory();
+  } else {
+    if (root.BMP) {
+      root.BMP.geolocation = factory();
+    } else {
+      root.geolocation = factory();
+    }
+  }
+}(this, function () {
+  
+
+  var api;
+
+  var module = {
+
+    setGeoLocation: function (geolocation) {
+      api = geolocation;
+    },
+
+    getGeoLocation: function () {
+      if (api && api.getCurrentPosition) {
+        return api;
+      }
+      if (typeof navigator !== 'undefined' && navigator.geolocation &&
+          navigator.geolocation.getCurrentPosition) {
+        return navigator.geolocation;
+      }
+      return false;
+    },
+
+    clonePosition: function (position) {
+      if (!position || typeof position !== 'object' || !position.coords || typeof position.coords !== 'object') {
+        throw new TypeError('cannot clone non-Position object');
+      }
+      return {
+        coords: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          altitude: position.coords.altitude,
+          accuracy: position.coords.accuracy,
+          altitudeAccuracy: position.coords.altitudeAccuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed
+        }
+      };
+    },
+
+    DEFAULT_POSITION_OPTIONS: {
+      enableHighAccuracy: true,
+      maximumAge: 0, // fresh results each time
+      timeout: 10 * 1000 // take no longer than 10 seconds
+    },
+
+    POSITION_OPTION_TYPES: {
+      enableHighAccuracy: 'boolean',
+      maximumAge: 'number',
+      timeout: 'number'
+    },
+
+    mergePositionOptions: function (options) {
+      var result;
+      if (!options || typeof options !== 'object') {
+        return module.DEFAULT_POSITION_OPTIONS;
+      }
+      result = {};
+      Object.keys(module.POSITION_OPTION_TYPES).forEach(function (option) {
+        var type = module.POSITION_OPTION_TYPES[option];
+        var value = options[option];
+        if (typeof options[option] === type && (type !== 'number' || !isNaN(value))) {
+          result[option] = options[option];
+        } else {
+          result[option] = module.DEFAULT_POSITION_OPTIONS[option];
+        }
+      });
+      return result;
+    },
+
+    requestCurrentPosition: function (onSuccess, onError, options) {
+      var geolocation = module.getGeoLocation();
+      if (!geolocation) {
+        throw new Error('the current web engine does not support GeoLocation');
+      }
+      if (typeof onSuccess !== 'function') {
+        throw new TypeError('getCurrentPosition(): 1st parameter must be a Function to handle success');
+      }
+      if (typeof onError !== 'function') {
+        throw new TypeError('getCurrentPosition(): 2nd parameter must be a Function to handle error');
+      }
+      options = module.mergePositionOptions(options);
+      return geolocation.getCurrentPosition(function (position) {
+        onSuccess(module.clonePosition(position));
+      }, onError, options);
+    },
+
+    getPromiseConstructor: function () {
+      if (typeof Promise !== 'undefined') {
+        return Promise;
+      }
+      if (typeof $ !== 'undefined' && $.Deferred) {
+        return $.Deferred;
+      }
+      return false;
+    },
+
+    getCurrentPosition: function (onSuccess, onError, options) {
+      var P = module.getPromiseConstructor();
+      if (P) {
+        return new P(function (resolve, reject) {
+          module.requestCurrentPosition(function (position) {
+            if (typeof onSuccess === 'function') {
+              onSuccess(position);
+            }
+            resolve(position);
+          }, function (err) {
+            if (typeof onError === 'function') {
+              onError(err);
+            }
+            reject(err);
+          }, options);
+        });
+      }
+      return module.requestCurrentPosition(onSuccess, onError, options);
+    }
+
+  };
+
+  return module;
+}));
+
+/*globals google:false*/
 define(
-  'view-interaction',['text!template-interaction.mustache', 'text!template-inputPrompt.mustache', 'view-form', 'model-application', 'text!template-category-list.mustache', 'model-star', 'text!template-pending.mustache', 'view-star', 'text!template-popup.mustache', 'text!template-clear-confirmation-popup.mustache'],
-  function (Template, inputPromptTemplate, FormView, app, categoryTemplate, StarModel, pendingTemplate, StarView, popupTemplate, clearConfirmationPopupTemplate) {
+  'view-interaction',['text!template-interaction.mustache', 'text!template-inputPrompt.mustache', 'view-form', 'model-application', 'text!template-category-list.mustache', 'model-star', 'text!template-pending.mustache', 'view-star', 'text!template-popup.mustache', 'text!template-clear-confirmation-popup.mustache', 'geolocation'],
+  function (Template, inputPromptTemplate, FormView, app, categoryTemplate, StarModel, pendingTemplate, StarView, popupTemplate, clearConfirmationPopupTemplate, geolocation) {
+    
 
     var InteractionView = Backbone.View.extend({
 
       initialize: function () {
         $('body').append(this.$el);
-        window.BMP.BIC3.view = this;
+        window.BMP.BIC.view = this;
 
-        // this.$el.once("pageremove", function () {
-        //   console.log("Backbone view cleanup");
+        // this.$el.once('pageremove', function () {
+        //   console.log('Backbone view cleanup');
 
         // })
       },
 
       events: {
         // Old Blink Link Shortcut Methods
-        "click [keyword]" : "blinklink",
-        "click [interaction]" : "blinklink",
-        "click [category]" : "blinklink",
-        "click [masterCategory]" : "blinklink",
-        "click [back]" : "back",
-        "click [home]" : "home",
-        "click [login]" : "blinklink",
-        "click [pending]" : "pendingQueue",
+        'click [keyword]': 'blinklink',
+        'click [interaction]': 'blinklink',
+        'click [category]': 'blinklink',
+        'click [masterCategory]': 'blinklink',
+        'click [back]': 'back',
+        'click [home]': 'home',
+        'click [login]': 'blinklink',
+        'click [pending]': 'pendingQueue',
 
         // Form Actions
-        "click #queue" : "pendingQueue",
-        "click .clearPendingItem": "clearPendingItem",
-        "click #submitPendingItems": "submitPendingItems",
-        "click #clearPendingItems": "clearPendingItems",
-        "click #clearPendingItemsConfirmation": "clearPendingItemsConfirmation",
+        'click #queue': 'pendingQueue',
+        'click .clearPendingItem': 'clearPendingItem',
+        'click #submitPendingItems': 'submitPendingItems',
+        'click #clearPendingItems': 'clearPendingItems',
+        'click #clearPendingItemsConfirmation': 'clearPendingItemsConfirmation',
 
         // Destroy
-        "pageremove" : "destroy"
+        'pageremove': 'destroy'
       },
 
       attributes: {
-        "data-role": "page"
+        'data-role': 'page'
       },
 
       blinklink: function (e) {
-        e.preventDefault();
+        var $element;
+        var location;
+        var attributes = '';
+        var first = true;
+        var count;
+        var path;
+        var pathParts;
 
-        var $element,
-          location,
-          attributes = "",
-          first = true,
-          count,
-          path,
-          pathParts;
+        e.preventDefault();
 
         if (e.target.tagName !== 'A') {
           $element = $(e.target).parents('a');
@@ -3620,56 +4262,52 @@ define(
           $element = $(e.target);
         }
 
-        location = "";
-        if ($element.attr("keyword")) {
-          location = $element.attr("keyword");
-        } else if ($element.attr("interaction")) {
-          location = $element.attr("interaction");
-        } else if ($element.attr("category")) {
-          location = $element.attr("category");
-        } else if ($element.attr("masterCategory")) {
-          location = $element.attr("masterCategory");
-        } else if ($element.attr("home") === "") {
-          location = app.get("siteName");
-        } else if ($element.attr("login") === "") {
-          if (app.has("loginAccess") && app.has("loginUseInteractions") && app.has("loginUseInteractions") && app.has("loginPromptInteraction")) {
-            location = app.get("loginPromptInteraction");
+        location = '';
+        if ($element.attr('keyword')) {
+          location = $element.attr('keyword');
+        } else if ($element.attr('interaction')) {
+          location = $element.attr('interaction');
+        } else if ($element.attr('category')) {
+          location = $element.attr('category');
+        } else if ($element.attr('masterCategory')) {
+          location = $element.attr('masterCategory');
+        } else if ($element.attr('home') === '') {
+          location = app.get('siteName');
+        } else if ($element.attr('login') === '') {
+          if (app.has('loginAccess') && app.has('loginUseInteractions') && app.has('loginUseInteractions') && app.has('loginPromptInteraction')) {
+            location = app.get('loginPromptInteraction');
           } else {
-            location = app.get("siteName");
+            location = app.get('siteName');
           }
         }
 
         for (count = 0; count < $element[0].attributes.length; count = count + 1) {
-          if ($element[0].attributes[count].name.substr(0, 1) === "_") {
+          if ($element[0].attributes[count].name.substr(0, 1) === '_') {
             if (!first) {
-              attributes += "&args[" + $element[0].attributes[count].name.substr(1) + "]=" + $element[0].attributes[count].value;
+              attributes += '&args[' + $element[0].attributes[count].name.substr(1) + ']=' + $element[0].attributes[count].value;
             } else {
               first = false;
-              attributes = "/?args[" + $element[0].attributes[count].name.substr(1) + "]=" + $element[0].attributes[count].value;
+              attributes = '/?args[' + $element[0].attributes[count].name.substr(1) + ']=' + $element[0].attributes[count].value;
             }
           }
         }
 
         path = '';
         pathParts = $.mobile.path.parseLocation().pathname;
-        if (window.cordova && window.cordova.offline && window.cordova.offline.available && pathParts.indexOf(window.cordova.offline.filePathPrex) !== -1) {
+        if (app.router.isOfflineFirst) {
           // Remove file path
-          pathParts = pathParts.substr(pathParts.indexOf(window.cordova.offline.filePathPrex) + window.cordova.offline.filePathPrex.length + 1);
-          // Remove domain info
-          pathParts = pathParts.substr(pathParts.indexOf('/'));
-          // Remove file suffix
-          pathParts = pathParts.substr(0, pathParts.indexOf('.'));
+          pathParts = app.router.getRootRelativePath(pathParts);
         }
         pathParts = pathParts.split('/');
         pathParts.shift();
-        if (pathParts[pathParts.length - 1] === "") {
+
+        // account for file:/// with triple slash, or leading slashes
+        if (pathParts[pathParts.length - 1] === '') {
           pathParts.pop();
         }
 
-        if (pathParts[0] === 'www' && pathParts[1] === window.initialURLHashed) {
-          pathParts.pop();
-          pathParts.pop();
-          pathParts[0] = window.BMP.BIC.siteVars.answerSpace;
+        if (app.router.isOfflineFirst && pathParts[0] === 'index.html') {
+          pathParts = [ window.BMP.BIC.siteVars.answerSpace.toLowerCase() ];
         }
 
         for (count = pathParts.length - 1; count !== -1; count = count - 1) {
@@ -3693,25 +4331,24 @@ define(
       },
 
       home: function () {
-        $.mobile.changePage('/' + app.get("siteName"));
+        $.mobile.changePage('/' + app.get('siteName'));
       },
 
       render: function (data) {
         var form,
           rawform,
           inheritedAttributes = this.model.inherit({}),
-          view = this,
-          subView;
+          view = this;
 
         // Non-type specific
-        if (_.has(inheritedAttributes, "themeSwatch")) {
-          this.$el.attr("data-theme", inheritedAttributes.themeSwatch);
+        if (_.has(inheritedAttributes, 'themeSwatch')) {
+          this.$el.attr('data-theme', inheritedAttributes.themeSwatch);
         }
 
         // Input Prompt
-        if (this.model.has("inputPrompt") && !(this.model.has("args"))) {
-          rawform = this.model.get("inputPrompt");
-          if (rawform.substr(0, 6) === "<form>") {
+        if (this.model.has('inputPrompt') && !this.model.has('args')) {
+          rawform = this.model.get('inputPrompt');
+          if (rawform.substr(0, 6) === '<form>') {
             form = rawform;
           } else {
             form = Mustache.render(inputPromptTemplate, {inputs: rawform});
@@ -3721,37 +4358,37 @@ define(
             footer: inheritedAttributes.footer,
             content: form
           }));
-          this.trigger("render");
-        } else if (view.model.has("type") && view.model.get("type") === "xslt") {
+          this.trigger('render');
+        } else if (view.model.has('type') && view.model.get('type') === 'xslt') {
           // XSLT
-          view.model.once("change:content", function () {
-            if (typeof view.model.get("content") === 'object') {
+          view.model.once('change:content', function () {
+            if (typeof view.model.get('content') === 'object') {
               view.$el.html(Mustache.render(Template, {
                 header: inheritedAttributes.header,
                 footer: inheritedAttributes.footer,
                 content: ''
               }));
-              view.$el.children('[data-role=content]')[0].appendChild(view.model.get("content"));
+              view.$el.children('[data-role=content]')[0].appendChild(view.model.get('content'));
               view.processStars();
-              view.trigger("render");
-            } else if (typeof view.model.get("content") === 'string') {
+              view.trigger('render');
+            } else if (typeof view.model.get('content') === 'string') {
               view.$el.html(Mustache.render(Template, {
                 header: inheritedAttributes.header,
                 footer: inheritedAttributes.footer,
-                content: view.model.get("content")
+                content: view.model.get('content')
               }));
-              view.trigger("render");
+              view.trigger('render');
             } else {
               view.$el.html(Mustache.render(Template, {
                 header: inheritedAttributes.header,
                 footer: inheritedAttributes.footer,
-                content: "Unknown error rendering XSLT interaction."
+                content: 'Unknown error rendering XSLT interaction.'
               }));
-              view.trigger("render");
+              view.trigger('render');
             }
           });
           this.model.performXSLT();
-        } else if (this.model.has("type") && this.model.get("type") === "form") {
+        } else if (this.model.has('type') && this.model.get('type') === 'form') {
           if ($('#ActiveFormContainer').length > 0) {
             $('#ActiveFormContainer').attr('id', 'FormContainer');
           }
@@ -3762,16 +4399,16 @@ define(
             footer: inheritedAttributes.footer
           }));
 
-          subView = new FormView({
+          view.subView = new FormView({
             model: view.model,
             el: view.$el.children('[data-role="content"]')
           });
 
-          view.listenToOnce(subView, 'render', function () {
+          view.listenToOnce(view.subView, 'render', function () {
             view.trigger('render');
           });
 
-          subView.render();
+          view.subView.render();
 
         } else if (this.model.id.toLowerCase() === window.BMP.BIC.siteVars.answerSpace.toLowerCase()) {
           // Home Screen
@@ -3779,19 +4416,19 @@ define(
             header: inheritedAttributes.header,
             footer: inheritedAttributes.footer,
             content: Mustache.render(categoryTemplate, {
-              models: view.model.get("interactionList"),
+              models: view.model.get('interactionList'),
               path: data.dataUrl.substr(-1) === '/' ? data.dataUrl : data.dataUrl + '/'
             })
           }));
-          view.trigger("render");
-        } else if (!this.model.has("type")) {
+          view.trigger('render');
+        } else if (!this.model.has('type')) {
           // Category
           view.$el.html(Mustache.render(Template, {
             header: inheritedAttributes.header,
             footer: inheritedAttributes.footer,
             content: Mustache.render(categoryTemplate, {
               models: _.map(_.filter(app.interactions.models, function (value) {
-                return value.get("display") !== "hide" && _.filter(value.get("tags"), function (element) {
+                return value.get('display') !== 'hide' && _.filter(value.get('tags'), function (element) {
                   return element === 'nav-' + this.model.id.toLowerCase();
                 }, this).length > 0;
               }, view), function (value) {
@@ -3800,66 +4437,63 @@ define(
               path: data.dataUrl.substr(-1) === '/' ? data.dataUrl : data.dataUrl + '/'
             })
           }));
-          view.trigger("render");
-        } else if (this.model.get("type") === "message") {
+          view.trigger('render');
+        } else if (this.model.get('type') === 'message') {
           this.$el.html(Mustache.render(Template, {
             header: inheritedAttributes.header,
             footer: inheritedAttributes.footer,
             content: inheritedAttributes.message
           }));
-          this.trigger("render");
+          this.trigger('render');
         } else {
           // MADL, others
           this.$el.html(Mustache.render(Template, inheritedAttributes));
-          if (this.model.has("content")) {
+          if (this.model.has('content')) {
             this.blinkAnswerMessages();
             this.maps();
             this.processStars();
           }
-          this.trigger("render");
+          this.trigger('render');
         }
         return this;
       },
 
       maps: function () {
-        var mapDiv = this.$el.find("[class=googlemap]"), script;
+        var mapDiv = this.$el.find('[class=googlemap]'), script;
 
         if (mapDiv.length !== 0) {
-          //this.$el.append('<style type="text/css">.googlemap { width: 100%; height: 360px; }</style>');
-          //this.$el.append('<script src="/_BICv3_/js/gMaps.js"></script>');
+          //this.$el.append('<style type='text/css'>.googlemap { width: 100%; height: 360px; }</style>');
+          //this.$el.append('<script src='/_BICv3_/js/gMaps.js'></script>');
           if (mapDiv.attr('data-marker-title') !== undefined) {
           // Address Map
-            window.BMP.BIC3.MapCallback = this.addressMap;
+            window.BMP.BIC.mapCallback = this.addressMap;
           } else if (mapDiv.attr('data-kml') !== undefined) {
           // KML Map
-            window.BMP.BIC3.MapCallback = this.kmlMap;
+            window.BMP.BIC.MapCallback = this.kmlMap;
           } else if (mapDiv.attr('data-map-action') !== undefined) {
           // Directions Map
-            window.BMP.BIC3.MapCallback = this.directionsMap;
+            window.BMP.BIC.mapCallback = this.directionsMap;
           } else {
           // Basic Map
-            window.BMP.BIC3.MapCallback = this.basicMap;
+            window.BMP.BIC.mapCallback = this.basicMap;
           }
 
           if (window.google === undefined) {
-            script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = "https://maps.googleapis.com/maps/api/js?v=3&sensor=true&callback=window.BMP.BIC3.MapCallback";
+            script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://maps.googleapis.com/maps/api/js?v=3&sensor=true&callback=window.BMP.BIC.mapCallback';
             $('body').append(script);
           } else {
-            window.BMP.BIC3.MapCallback();
+            window.BMP.BIC.mapCallback();
           }
         }
       },
 
       blinkAnswerMessages: function (message) {
+        var blinkAnswerMessage = this.model.get('content').match(/<!-- blinkAnswerMessage:\{.*\} -->/g);
+
         if (!message) {
           // First Pass - Extract content
-
-          /*jslint regexp: true */
-          var blinkAnswerMessage = this.model.get('content').match(/<!-- blinkAnswerMessage:\{.*\} -->/g);
-          /*jslint regexp: false */
-
           if ($.type(blinkAnswerMessage) === 'array') {
             _.each(blinkAnswerMessage, function (element) {
               this.blinkAnswerMessages(element.substring(24, element.length - 4));
@@ -3917,8 +4551,8 @@ define(
               pendingAttrs._id = pendingItem.cid;
             }
             pendingAttrs.editInteraction = app.interactions.where({
-              blinkFormObjectName: pendingItem.get("name"),
-              blinkFormAction: pendingItem.get("action")
+              blinkFormObjectName: pendingItem.get('name'),
+              blinkFormAction: pendingItem.get('action')
             });
             if (pendingAttrs.editInteraction && pendingAttrs.editInteraction.length > 0) {
               pendingAttrs.editInteraction = pendingAttrs.editInteraction[0].id;
@@ -4007,11 +4641,13 @@ define(
       },
 
       popup: function (data) {
+        var popup$;
         this.$el.append(Mustache.render(popupTemplate, {
           contents: data
         }));
-        this.$el.trigger('pagecreate');
-        $('#popup').popup('open');
+        popup$ = $('#popup').popup().popup('open').one('popupafterclose', function () {
+          popup$.remove();
+        });
       },
 
       destroy: function () {
@@ -4021,7 +4657,6 @@ define(
       processStars: function () {
         var elements = this.$el.find('.blink-starrable');
         if (elements) {
-          /*jslint unparam: true*/
           elements.each(function (index, element) {
             var attrs,
               model = app.stars.get($(element).data('id')),
@@ -4039,14 +4674,13 @@ define(
             });
             star.render();
           });
-          /*jslint unparam: false*/
         }
       },
 
 
 
       basicMap: function () {
-        var options, map, mapDiv = window.BMP.BIC3.view.$el.find("[class=googlemap]");
+        var options, map, mapDiv = window.BMP.BIC3.view.$el.find('[class=googlemap]');
 
         options = {
           center: new google.maps.LatLng(mapDiv.attr('data-latitude'), mapDiv.attr('data-longitude')),
@@ -4054,16 +4688,16 @@ define(
           mapTypeId: google.maps.MapTypeId[mapDiv.attr('data-type').toUpperCase()]
         };
 
-        map = new google.maps.Map($("[class=\'googlemap\']")[0], options);
+        map = new google.maps.Map($('[class=\'googlemap\']')[0], options);
 
-        $(document).bind("pageshow", function () {
-          google.maps.event.trigger(map, "resize");
+        $(document).bind('pageshow', function () {
+          google.maps.event.trigger(map, 'resize');
           map.setCenter(new google.maps.LatLng(mapDiv.attr('data-latitude'), mapDiv.attr('data-longitude')));
         });
       },
 
       addressMap: function () {
-        var geocoder, options, map, mapDiv = window.BMP.BIC3.view.$el.find("[class=googlemap]");
+        var geocoder, options, map, mapDiv = window.BMP.BIC3.view.$el.find('[class=googlemap]');
 
         geocoder = new google.maps.Geocoder();
 
@@ -4077,16 +4711,16 @@ define(
             zoom: parseInt(mapDiv.attr('data-zoom'), 10),
             mapTypeId: google.maps.MapTypeId[mapDiv.attr('data-type').toUpperCase()]
           };
-          map = new google.maps.Map($("[class=\'googlemap\']")[0], options);
-          $(document).bind("pageshow", function () {
-            google.maps.event.trigger(map, "resize");
+          map = new google.maps.Map($('[class=\'googlemap\']')[0], options);
+          $(document).bind('pageshow', function () {
+            google.maps.event.trigger(map, 'resize');
             map.setCenter(results[0].geometry.location);
           });
         });
       },
 
       kmlMap: function () {
-        var options, map, kml, mapDiv = window.BMP.BIC3.view.$el.find("[class=googlemap]");
+        var options, map, kml, mapDiv = window.BMP.BIC3.view.$el.find('[class=googlemap]');
 
         options = {
           center: new google.maps.LatLng(mapDiv.attr('data-latitude'), mapDiv.attr('data-longitude')),
@@ -4094,56 +4728,20 @@ define(
           mapTypeId: google.maps.MapTypeId[mapDiv.attr('data-type').toUpperCase()]
         };
 
-        map = new google.maps.Map($("[class=\'googlemap\']")[0], options);
+        map = new google.maps.Map($('[class=\'googlemap\']')[0], options);
         kml = new google.maps.KmlLayer(mapDiv.attr('data-kml'), {preserveViewport: true});
         kml.setMap(map);
 
-        $(document).bind("pageshow", function () {
-          google.maps.event.trigger(map, "resize");
+        $(document).bind('pageshow', function () {
+          google.maps.event.trigger(map, 'resize');
           map.setCenter(new google.maps.LatLng(mapDiv.attr('data-latitude'), mapDiv.attr('data-longitude')));
         });
       },
 
       directionsMap: function () {
-        var options, map, directionsDisplay, directionsService, origin, destination, locationPromise, request, getGeoLocation, mapDiv;
+        var options, map, directionsDisplay, directionsService, origin, destination, locationPromise, request, mapDiv;
 
-        mapDiv = window.BMP.BIC3.view.$el.find("[class=googlemap]");
-
-        getGeoLocation = function (options) {
-          var defaultOptions = {
-              enableHighAccuracy: true,
-              maximumAge: 5 * 60 * 1000, // 5 minutes
-              timeout: 5 * 1000 // 5 seconds
-            };
-          options = $.extend({}, defaultOptions, $.isPlainObject(options) ? options : {});
-
-          return new Promise(function (resolve, reject) {
-            navigator.geolocation.getCurrentPosition(function (position) {
-              var coords = position.coords;
-              if ($.type(coords) === 'object') {
-                resolve(coords);
-              } else {
-                reject('GeoLocation error: blank location from browser / device');
-              }
-            }, function (error) {
-              var string;
-              switch (error.code) {
-              case error.PERMISSION_DENIED:
-                string = 'user has not granted permission';
-                break;
-              case error.PERMISSION_DENIED_TIMEOUT:
-                string = 'user did not grant permission in time';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                string = 'unable to determine position';
-                break;
-              default:
-                string = 'unknown error';
-              }
-              reject('GeoLocation error: ' + string);
-            }, options);
-          });
-        };
+        mapDiv = window.BMP.BIC3.view.$el.find('[class=googlemap]');
 
         directionsDisplay = new google.maps.DirectionsRenderer();
         directionsService = new google.maps.DirectionsService();
@@ -4154,18 +4752,18 @@ define(
           mapTypeId: google.maps.MapTypeId[mapDiv.attr('data-type').toUpperCase()]
         };
 
-        map = new google.maps.Map($("[class=\'googlemap\']")[0], options);
+        map = new google.maps.Map($('[class=\'googlemap\']')[0], options);
 
-        directionsDisplay.setPanel($("[class='googledirections']")[0]);
+        directionsDisplay.setPanel($('[class="googledirections"]')[0]);
 
-        $(document).bind("pageshow", function () {
-          google.maps.event.trigger(map, "resize");
+        $(document).bind('pageshow', function () {
+          google.maps.event.trigger(map, 'resize');
           directionsDisplay.setMap(map);
         });
 
         if (mapDiv.attr('data-destination-address') === undefined || mapDiv.attr('data-origin-address') === undefined) {
           // Set the origin from attributes or GPS
-          locationPromise = getGeoLocation();
+          locationPromise = window.BMP.BIC.getCurrentPosition();
           locationPromise.then(function (location) {
             if (mapDiv.attr('data-origin-address') === undefined) {
               origin = new google.maps.LatLng(location.latitude, location.longitude);
@@ -4203,6 +4801,40 @@ define(
       }
     });
 
+    window.BMP.geolocation = geolocation;
+
+    window.BMP.BIC.getCurrentPosition = function (options) {
+      return new Promise(function (resolve, reject) {
+        window.BMP.geolocation.getCurrentPosition()
+        .then(function (position) {
+          if ($.type(position.coords) === 'object') {
+            resolve(position.coords);
+          } else {
+            reject('GeoLocation error: blank location from browser / device');
+          }
+        }, function (error) {
+          var string;
+          // ESLint bug: https://github.com/eslint/eslint/issues/2038
+          /*eslint-disable no-duplicate-case*/
+          switch (error.code) {
+          case error.PERMISSION_DENIED:
+            string = 'user has not granted permission';
+            break;
+          case error.PERMISSION_DENIED_TIMEOUT:
+            string = 'user did not grant permission in time';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            string = 'unable to determine position';
+            break;
+          default:
+            string = 'unknown error';
+          }
+          /*eslint-enable no-duplicate-case*/
+          reject('GeoLocation error: ' + string);
+        }, options);
+      });
+    };
+
     return InteractionView;
   }
 );
@@ -4210,12 +4842,37 @@ define(
 define(
   'router',['model-application', 'view-interaction'],
   function (app, InteractionView) {
-
+    
     var Router = Backbone.Router.extend({
       initialize: function () {
         BMP.FileInput.initialize();
 
         app.router = this;
+
+        this.isOfflineFirst = (function () {
+          var isLocalProtocol = location.protocol === 'file:' || location.protocol === 'ms-appx:';
+          return isLocalProtocol &&
+            /\/www\/index\.html$/.test(location.pathname);
+        }());
+
+        this.offlineDirectory = (function (me) {
+          return me.isOfflineFirst ? location.href.replace(/\/www\/index\.html$/, '/www/') : '';
+        }(this));
+
+        if (BMP.isBlinkGap) {
+          $(document).on('pause', this.suspendApplication);
+          $(document).on('resume', this.resumeApplication);
+        }
+
+        if (document.hidden !== undefined) {
+          $(document).on('visibilitychange', function () {
+            if (document.hidden) {
+              app.router.suspendApplication();
+            } else {
+              app.router.resumeApplication();
+            }
+          });
+        }
 
         $(document).on('pagebeforeload', function (e, data) {
           e.preventDefault();
@@ -4238,13 +4895,24 @@ define(
             return;
           })
           .then(function () {
-            return app.populate();
-          })
-          .then(null, function () {
-            return;
+            // Need to hang around until native offline is ready
+            return new Promise(function (resolve, reject) {
+              if (BMP.BlinkGap.isHere() && BMP.BlinkGap.hasOffline()) {
+                BMP.BlinkGap.waitForOffline(
+                  function () {
+                    resolve();
+                  },
+                  function () {
+                    reject();
+                  }
+                );
+              } else {
+                resolve();
+              }
+            });
           })
           .then(function () {
-            return app.forms.download();
+            return app.populate();
           })
           .then(null, function () {
             return;
@@ -4263,11 +4931,11 @@ define(
 
         if (BMP.BlinkGap.isOfflineReady() && path.hrefNoSearch.indexOf(window.cordova.offline.filePathPrex) !== -1) {
           // Remove file path
-          path.hrefNoSearch = path.hrefNoSearch.substr(path.hrefNoSearch.indexOf(window.cordova.offline.filePathPrex) + window.cordova.offline.filePathPrex.length + 1);
+          path.pathname = path.hrefNoSearch.substr(path.hrefNoSearch.indexOf(window.cordova.offline.filePathPrex) + window.cordova.offline.filePathPrex.length + 1);
           // Remove domain info
-          path.hrefNoSearch = path.hrefNoSearch.substr(path.hrefNoSearch.indexOf('/'));
+          path.pathname = path.pathname.substr(path.pathname.indexOf('/'));
           // Remove file suffix
-          path.hrefNoSearch = path.hrefNoSearch.substr(0, path.hrefNoSearch.indexOf('.'));
+          path.pathname = path.pathname.substr(0, path.pathname.indexOf('.'));
         }
 
         app.whenPopulated()
@@ -4276,19 +4944,19 @@ define(
           })
           .then(function () {
 
-            model = app.router.inheritanceChain(path.pathname);
+            model = app.router.inheritanceChain(path);
 
             app.currentInteraction = model;
 
             app.router.parseArgs(path.search.substr(1), model);
 
-            model.prepareForView(data).then(function (model) {
+            model.prepareForView(data).then(function (innerModel) {
               new InteractionView({
                 tagName: 'div',
-                model: model
-              }).once("render", function () {
-                this.$el.attr("data-url", data.dataUrl);
-                this.$el.attr("data-external-page", true);
+                model: innerModel
+              }).once('render', function () {
+                this.$el.attr('data-url', data.dataUrl);
+                this.$el.attr('data-external-page', true);
                 this.$el.one('pagecreate', $.mobile._bindPageRemove);
                 data.deferred.resolve(data.absUrl, data.options, this.$el);
               }).render(data);
@@ -4303,33 +4971,35 @@ define(
 
       inheritanceChain: function (data) {
         var path, parentModel, parent, usedPathItems;
-        path = data.substr(1).toLowerCase().split('/').reverse();
+
+        path = (data.pathname || data.path || '').substr(1).toLowerCase().split('/').reverse();
         parent = path[path.length - 1];
         usedPathItems = [];
 
-        if (path[0] === "") {
+        // account for file:/// with triple slash, or leading slashes
+        if (path[0] === '') {
           path.shift();
         }
 
-        if (path[0] === window.initialURLHashed && path[path.length - 1] === 'www') {
-          path[0] = window.BMP.BIC.siteVars.answerSpace;
-          path.pop();
-          path.pop();
+        if (this.isOfflineFirst) {
+          if (path[0] === 'index.html' && path[1] === 'www') {
+            path = [ window.BMP.BIC.siteVars.answerSpace.toLowerCase() ];
+          }
         }
 
         _.each(path, function (element, index) {
           if (!_.find(usedPathItems, function (id) {return id === element; })) {
-            parentModel = app.interactions.get(element) || app.interactions.where({dbid: "i" + element})[0] || null;
+            parentModel = app.interactions.get(element) || app.interactions.where({dbid: 'i' + element})[0] || null;
             if (parent && parentModel) {
               if (index !== path.length - 1) {
                 parentModel.set({parent: parent});
                 parent = parentModel.id;
               } else {
-                parentModel.set({parent: "app"});
-                parent = "app";
+                parentModel.set({parent: 'app'});
+                parent = 'app';
               }
             } else {
-              throw "Invalid Model Name";
+              throw new Error('Invalid Model Name:' + parent);
             }
             usedPathItems.push(element);
           }
@@ -4345,8 +5015,8 @@ define(
 
         _.each(args, function (element) {
           tempargs = element.split('=');
-          if (tempargs[0].substr(0, 4) !== "args") {
-            tempargs[0] = "args[" + tempargs[0] + "]";
+          if (tempargs[0].substr(0, 4) !== 'args') {
+            tempargs[0] = 'args[' + tempargs[0] + ']';
           }
           finalargs[tempargs[0]] = tempargs[1];
         });
@@ -4358,12 +5028,93 @@ define(
         }
 
         return this;
+      },
+
+      suspendApplication: function () {
+        var url = $.mobile.path.parseLocation();
+        // Store current URL
+        localStorage.setItem('pauseURL', url.hrefNoHash);
+        // Store form data, if applicable
+        if (BMP.BIC.currentInteraction.get('type') === 'form') {
+          if (app.currentInteraction.get('args')['args[pid]']) {
+            // saving over existing draft
+            app.view.subView.subView.subView.addToQueue('Draft', true);
+          } else {
+            // saving a new draft
+            app.view.subView.subView.subView.addToQueue('Draft', true)
+              .then(function (model) {
+                var search = url.search;
+                search += search.substring(0, 1) !== '?' ? '?' : '&';
+                search += 'args[pid]=' + model.id;
+                localStorage.setItem('pauseURL', url.hrefNoSearch + search);
+              });
+          }
+        }
+      },
+
+      resumeApplication: function () {
+        var pauseURL = localStorage.getItem('pauseURL');
+        var url;
+        var isFormOpen;
+        var isPendingURL;
+        if (!pauseURL) {
+          return;
+        }
+        url = $.mobile.path.parseUrl(pauseURL);
+        if (location.href !== pauseURL) {
+          isPendingURL = url.search.indexOf('args[pid]=') !== -1;
+          isFormOpen = !!BMP.Forms.current.get('_view').$el.closest('body').length;
+          if (isPendingURL && isFormOpen) {
+            // already at open pending form
+            $.noop();
+            // note: this probably isn't good enough for solutions where the
+            // default screen is a form, as it will not open the pending record
+          } else {
+            // navigating...
+            $.mobile.changePage(pauseURL);
+          }
+        } else {
+          // already here
+          $.noop();
+        }
+        localStorage.removeItem('pauseURL');
+      },
+
+      getRootRelativePath: function (path) {
+        var parsed;
+        if (!this.isOfflineFirst) {
+          return path;
+        }
+        parsed = $.mobile.path.parseUrl(this.offlineDirectory);
+        return path.replace(parsed.pathname, '/');
       }
     });
 
     return new Router();
   }
 );
+
+define('auth',['facade'], function (facade) {
+  
+
+  var auth = window.BMP.Authentication;
+
+  facade.subscribe('offlineAuthentication', 'storeAuth', function (authentication) {
+    auth.setCurrent(authentication, function () {
+      facade.publish('storeAuthSuccess');
+    }, function () {
+      facade.publish('storeAuthFailure');
+    });
+  });
+
+  facade.subscribe('offlineAuthentication', 'authenticateAuth', function (authentication) {
+    auth.authenticate(authentication, function () {
+      facade.publish('loggedIn');
+    }, function () {
+      facade.publish('loggedOut');
+    });
+  });
+});
 
 
 require('main');
